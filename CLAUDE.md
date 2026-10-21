@@ -37,7 +37,7 @@ Part 2: Teaching computers language
 Part 3: The birth of LLMs
 
 9. **GPT-1 and pre-training.** Next-word prediction on raw text, then fine-tuning; BERT as the fill-in-the-blank rival. Meant to be heard before reading the GPT-1 paper.
-10. **What happens when you press Enter.** Probabilities, sampling, temperature, context windows; why next-word prediction can look like thinking, and hallucinations.
+10. **What happens when you press Enter.** Probabilities, sampling, temperature, context windows; why next-word prediction can look like thinking, and hallucinations. Contextual inertia: the model rereads the whole chat every turn, so its own earlier answers pull on the next ones, and it can cling to an early wrong turn even after you correct it; why a fresh chat often helps. Papers: "Breaking Contextual Inertia" (2026, arXiv 2603.04783) and "LLMs Get Lost in Multi-Turn Conversation" (2025, arXiv 2505.06120).
 11. **Scale changes everything.** GPT-2, GPT-3 and in-context learning, scaling laws, the race for bigger models and data centers.
 12. **From autocomplete to assistant.** Base models vs. chat models, instruction tuning, RLHF, and how ChatGPT came together.
 
