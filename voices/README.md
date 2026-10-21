@@ -1,6 +1,6 @@
 # Voices
 
-The renderer clones each host's voice from one of these recordings, e.g. `tools/render.py script.md out.mp3 --voice COHOST=voices/carter.wav`. The defaults are Frank explaining and Alice asking.
+The renderer clones each host's voice from the recording named after them: a script line starting `FRANK:` is spoken in the voice of `frank.wav`. To try another recording, pass e.g. `--voice ALICE=voices/maya.wav`. The show's hosts are Frank and Alice.
 
 - `alice.wav`, `carter.wav`, `frank.wav`, `maya.wav`: VibeVoice's demo voices (MIT license, © 2025 Microsoft), from the Hugging Face dataset `bezzam/vibevoice_samples`.
 

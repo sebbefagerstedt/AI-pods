@@ -3,25 +3,29 @@
 
 VibeVoice performs the whole conversation at once, so the hosts react to each
 other the way people talking do. Each host's voice is cloned from a short
-recording in voices/.
+recording: voices/<name>.wav, unless --voice says otherwise.
 
-Every paragraph of the script starts with a speaker label, plain or bold.
-Headings (lines starting with #) are skipped:
+Every paragraph of the script starts with the speaker's name in capitals,
+plain or bold. Headings (lines starting with #) are skipped:
 
-    HOST: Think about how a kid learns what a cat is.
+    FRANK: Think about how a kid learns what a cat is.
 
-    **COHOST:** Wait, and that works for computers?
+    **ALICE:** Wait, and that works for computers?
 
 Set up the venv with tools/setup.sh, then:
 
     .venv/bin/python tools/render.py samples/sample.md samples/sample.mp3
-    .venv/bin/python tools/render.py script.md out.mp3 --voice COHOST=voices/carter.wav
+    .venv/bin/python tools/render.py script.md out.mp3 --voice ALICE=voices/maya.wav
 
-It runs about 5 times slower than real time on 4 CPUs. Finished segments are
-cached in .cache/, so a render that gets interrupted picks up where it stopped.
+It renders about 3 minutes of script at a time, about 5 times slower than real
+time on 4 CPUs. VibeVoice now and then puts a line in the wrong voice, garbles
+it or adds a stray sound, so each segment is transcribed and checked, and
+retaken with a new seed if anything is off. Finished segments are cached in
+.cache/, so a render that gets interrupted picks up where it stopped.
 """
 
 import argparse
+import difflib
 import hashlib
 import json
 import re
@@ -30,6 +34,7 @@ import sys
 import tempfile
 import time
 import warnings
+from collections import defaultdict
 from contextlib import contextmanager
 from pathlib import Path
 
@@ -38,7 +43,8 @@ warnings.filterwarnings("ignore")  # deprecation noise from torch and transforme
 import numpy as np
 import soundfile as sf
 import torch
-from transformers import AutoFeatureExtractor, AutoModelForTextToWaveform, AutoProcessor, WavLMForXVector, set_seed
+from transformers import (AutoFeatureExtractor, AutoModelForTextToWaveform, AutoProcessor, WavLMForXVector, pipeline,
+                          set_seed)
 from transformers.utils import logging
 
 logging.set_verbosity_error()
@@ -47,9 +53,10 @@ logging.disable_progress_bar()
 ROOT = Path(__file__).resolve().parent.parent
 MODEL = "vibevoice/VibeVoice-1.5B-hf"
 SPEAKER_MODEL = "microsoft/wavlm-base-plus-sv"  # tells the hosts apart by their voices
+ASR_MODEL = "openai/whisper-small.en"  # hears whether each line came out right
 RATE = 24000  # VibeVoice's sample rate
-VOICES = {"HOST": ROOT / "voices/frank.wav", "COHOST": ROOT / "voices/alice.wav"}  # explainer, co-host
 SEGMENT_CHARS = 3000  # about 3 minutes of speech per generation
+TAKES = 3  # tries per segment before settling for the take with the fewest problems
 LONGEST_PAUSE = 0.7  # seconds; the model sometimes leaves longer gaps between turns
 MIN_GAP = 0.15  # seconds of quiet that end a stretch of speech
 MIN_VOICE = 0.5  # seconds of audio the speaker model needs
@@ -60,7 +67,7 @@ CACHE = ROOT / ".cache" / "segments"
 LABEL = re.compile(r"\**([A-Z]+):\**\s*(.+)")
 
 
-def parse(path, voices):
+def parse(path):
     """Return (speaker, text) for each paragraph of the script."""
     lines = Path(path).read_text().splitlines()
     text = "\n".join(line for line in lines if not line.startswith("#"))
@@ -72,10 +79,19 @@ def parse(path, voices):
         match = LABEL.fullmatch(para)
         if not match:
             sys.exit(f"{path}: paragraph without a speaker label: {para[:60]}")
-        if match[1] not in voices:
-            sys.exit(f"{path}: unknown speaker {match[1]}, pass --voice {match[1]}=...")
         turns.append((match[1], match[2].replace("*", "")))
     return turns
+
+
+def voice_files(turns, overrides):
+    """Map each speaker in the script to the recording their voice is cloned from."""
+    voices = {}
+    for speaker in sorted({speaker for speaker, _ in turns}):
+        path = Path(overrides.get(speaker) or ROOT / "voices" / f"{speaker.lower()}.wav")
+        if not path.exists():
+            sys.exit(f"No voice for {speaker}: add voices/{speaker.lower()}.wav or pass --voice {speaker}=FILE")
+        voices[speaker] = path
+    return voices
 
 
 def segments(turns):
@@ -207,15 +223,75 @@ def closest(scores):
     return None
 
 
-def level_speakers(audio, voices):
+def words(text):
+    """Lowercase words without punctuation, for comparing a script with a transcript."""
+    return re.findall(r"[a-z0-9']+", text.lower())
+
+
+def transcriber():
+    """Return a function that turns 16 kHz audio into (word, start, end) tuples."""
+    asr = pipeline("automatic-speech-recognition", model=ASR_MODEL, chunk_length_s=30)
+
+    def transcribe(audio):
+        chunks = asr({"raw": audio, "sampling_rate": 16000}, return_timestamps="word")["chunks"]
+        return [(word, chunk["timestamp"][0], chunk["timestamp"][1] or chunk["timestamp"][0])
+                for chunk in chunks for word in words(chunk["text"])]
+
+    return transcribe
+
+
+def review(turns, audio16, score, transcribe, first_line=1):
+    """Find what went wrong in a render: lines missing or in the wrong voice, and odd sounds.
+
+    Lines a Whisper transcript up with the script word by word to find when each
+    line is spoken, then checks whose voice it's in. Returns the problems, how
+    much of the script's wording the transcript matches, and where they differ.
+    """
+    heard = transcribe(audio16)
+    written = [(word, i) for i, (_, text) in enumerate(turns) for word in words(text)]
+    matcher = difflib.SequenceMatcher(None, [w for w, _ in written], [w for w, _, _ in heard], autojunk=False)
+    spoken = defaultdict(list)  # line -> (start, end) of each of its words that was heard
+    for a, b, size in matcher.get_matching_blocks():
+        for k in range(size):
+            _, start, end = heard[b + k]
+            # Whisper often runs a word's end on over the pause after it, so cap it
+            spoken[written[a + k][1]].append((start, min(end, start + 0.5)))
+    problems = []
+    for i, (speaker, text) in enumerate(turns):
+        line, total = f"line {first_line + i} ({speaker})", len(words(text))
+        if total >= 5 and len(spoken[i]) < 0.6 * total:
+            problems.append(f"{line} mostly missing: heard {len(spoken[i])} of {total} words")
+        elif spoken[i]:
+            start, end = spoken[i][0][0], spoken[i][-1][1]
+            voice = closest(score(audio16[int(start * 16000) : int(end * 16000)]))
+            if voice and voice != speaker:
+                problems.append(f"{line} came out in {voice}'s voice")
+    times = [t for line in spoken.values() for t in line]
+    for start, end in stretches(audio16, 16000):
+        start, end = start / 16000, end / 16000
+        scripted = sum(max(0, min(e, end) - max(s, start)) for s, e in times)
+        if scripted < 0.3 * (end - start):
+            scores = score(audio16[int(start * 16000) : int(end * 16000)])
+            if scores and max(scores.values()) < 0.6:
+                problems.append(f"odd sound at {start:.1f} s, like neither host")
+    differences = [(" ".join(w for w, _ in written[i1:i2]), " ".join(w for w, _, _ in heard[j1:j2]))
+                   for op, i1, i2, j1, j2 in matcher.get_opcodes() if op != "equal"]
+    return problems, matcher.ratio(), differences
+
+
+def to_16k(audio):
+    """Resample to 16 kHz, what Whisper and the speaker model expect."""
+    with as_wav(audio) as wav:
+        return load_audio(wav, 16000)
+
+
+def level_speakers(audio, score):
     """Bring each host to the target loudness, telling who speaks each stretch by voice.
 
     Clones can come out a dB or two apart. The gain only changes in the pauses
     between stretches.
     """
-    score = voice_matcher(voices)
-    with as_wav(audio) as wav:
-        audio16 = load_audio(wav, 16000)
+    audio16 = to_16k(audio)
     spans = stretches(audio, RATE)
     labels = [closest(score(audio16[a * 2 // 3 : b * 2 // 3])) for a, b in spans]
     known = [label for label in labels if label]
@@ -274,34 +350,45 @@ def main():
     parser = argparse.ArgumentParser(description="Render a two-host script to MP3 with VibeVoice.")
     parser.add_argument("script", help="Markdown script, one speaker-labeled paragraph per turn")
     parser.add_argument("mp3", help="output file")
-    parser.add_argument("--voice", action="append", default=[], metavar="SPEAKER=WAV",
-                        help="clone a speaker's voice from this recording "
-                             "(defaults: HOST=voices/frank.wav, COHOST=voices/alice.wav)")
+    parser.add_argument("--voice", action="append", default=[], metavar="SPEAKER=FILE",
+                        help="clone a speaker's voice from this recording instead of voices/<name>.wav")
     parser.add_argument("--seed", type=int, default=42, help="change it to get a different take")
     parser.add_argument("--title", help="MP3 title tag (default: output file name)")
     args = parser.parse_args()
 
-    voices = VOICES | dict(v.split("=", 1) for v in args.voice)
-    turns = parse(args.script, voices)
+    turns = parse(args.script)
+    voices = voice_files(turns, dict(v.split("=", 1) for v in args.voice))
     groups = segments(turns)
+    score = voice_matcher(voices)
     start = time.time()
-    parts, processor, model = [], None, None
+    parts, processor, model, transcribe, first_line = [], None, None, None, 1
     for n, segment in enumerate(groups, 1):
         path = cache_path(segment, voices, args.seed)
         if not path.exists():
             if model is None:
                 processor = AutoProcessor.from_pretrained(MODEL)
                 model = AutoModelForTextToWaveform.from_pretrained(MODEL, dtype=torch.bfloat16).eval()
+                transcribe = transcriber()
+            best = None
+            for take in range(TAKES):
+                audio = synthesize(segment, voices, args.seed + take, processor, model)
+                problems = review(segment, to_16k(audio), score, transcribe, first_line)[0]
+                print(f"[{n}/{len(groups)}] take {take + 1}: {'; '.join(problems) or 'every line checks out'}",
+                      flush=True)
+                if best is None or len(problems) < len(best[1]):
+                    best = audio, problems
+                if not problems:
+                    break
             CACHE.mkdir(parents=True, exist_ok=True)
             partial = path.with_suffix(".partial.wav")
-            sf.write(partial, synthesize(segment, voices, args.seed, processor, model), RATE)
+            sf.write(partial, best[0], RATE)
             partial.replace(path)
         parts.append(sf.read(path, dtype="float32")[0])
+        first_line += len(segment)
         print(f"[{n}/{len(groups)}] {len(parts[-1]) / RATE:.0f} s of audio, {time.time() - start:.0f} s so far",
               flush=True)
 
-    used = {speaker: voices[speaker] for speaker in sorted({s for s, _ in turns})}
-    audio = level_speakers(cap_pauses(np.concatenate(parts)), used)
+    audio = level_speakers(cap_pauses(np.concatenate(parts)), score)
     audio = np.concatenate([audio, silence(0.8)])
     export(audio, args.mp3, args.title or Path(args.mp3).stem)
     print(f"Wrote {args.mp3}: {len(audio) / RATE:.1f} s of audio in {time.time() - start:.0f} s")

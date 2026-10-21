@@ -11,11 +11,12 @@ A personal podcast series that teaches AI and LLM fundamentals. Episodes are wri
 ## Decisions
 
 - Episodes of about 20 minutes (roughly 3,000 words of script).
-- Two hosts: one explains, the other is a sharp, curious co-host who asks the questions the listener would ask ("wait, why does that matter?").
+- Two hosts, Frank and Alice. In each segment one explains and the other is the sharp, curious one who asks the questions the listener would ask ("wait, why does that matter?"); they swap roles from segment to segment, with a short handover ("Alice, this one's yours").
+- The series is called "From Zero to ChatGPT" in the episodes, after the season title.
 - English.
 - Plain language and everyday analogies first, then the real term. Nothing should require seeing an equation.
 - Each episode builds on the earlier ones and ends with a short recap.
-- Each episode in the repo: the script with show notes (key terms, links to the original papers) and the MP3. Test clips go in `samples/`, episodes in `episodes/NN-slug/`.
+- Each episode in the repo: the script with show notes (key terms, links to the original papers) and the MP3. Test clips go in `samples/`, episodes in `episodes/NN-slug/`: `script.md` (the dialogue only, so it can be rendered), `notes.md` (the show notes) and `NN-slug.mp3`.
 - For now, the MP3s just live in this repo. Later the listener will set up GitHub Pages so an RSS feed can bring the episodes into Apple Podcasts (Follow a Show by URL). The repo will become private: Pages on a private repo needs a paid GitHub plan, and the Pages site itself stays public.
 
 ## Season 1: From zero to ChatGPT
@@ -47,21 +48,22 @@ Possible Season 2, "Understanding the headlines": hallucinations, memory and RAG
 
 1. The first samples, made with Kokoro, sounded too computer-like. The listener likes how "The Curiosity Mix" sounds, an AI podcast that has all the hallmarks of NotebookLM's Audio Overviews: the hosts react to each other ("Right." "Exactly."), use fillers and finish each other's sentences.
 2. Switched to VibeVoice, which performs the whole conversation at once. Feedback on the first VibeVoice samples: the listener likes Frank's voice, and Maya sounds like a computer (her source recording is a flat technical reading).
-3. Done: two samples of the lines in `samples/sample.md` pairing Frank with Alice, the other conversational voice. Frank explains and Alice asks (recommended: he gets the most airtime and it's the cleaner take), or the other way round. Waiting for the listener's pick. They may record their own voice for one host (see `voices/README.md`). When a recording arrives, convert it to WAV in `voices/`, render the sample with it and run the check.
-4. Produce episodes 1–2 as a pilot; adjust depth, tone and voices before making the rest.
+3. The listener picked Frank and Alice and asked them to swap roles during episodes. (They also offered to record their own voice; see `voices/README.md` if that comes up again.)
+4. In progress: episode 1 in `episodes/01-what-is-ai/`, written and rendering. Next, the listener's feedback on it, then episode 2, then the rest.
 
 ## Scripts and voices
 
-- Script format: every paragraph starts with a speaker label, `HOST:` (the explainer) or `COHOST:`. Lines starting with `#` are skipped. Any other unlabeled paragraph stops the render, so nothing is dropped silently.
-- Write the way people talk, not the way people read aloud. The co-host reacts and pushes back ("Okay, fair. But...", "Huh. So..."), and both hosts use the odd filler, unfinished thought or "you know". VibeVoice performs these naturally. It doesn't do overlapping speech or sounds like laughter.
-- Voices are cloned from recordings in `voices/`. The four demo voices are Alice and Maya (women) and Carter and Frank (men); the defaults are Frank explaining and Alice asking. A clone copies the recording's delivery as well as its sound: Alice and Carter are chatty, Frank's source is a narrated deep dive, and Maya's a technical reading (rejected as computer-like).
-- If a word comes out wrong, respell it the way it sounds.
-- Nobody can listen during a session, so check every render with `tools/check.py`. It splits the MP3 at pauses, labels each stretch with the closest host voice, transcribes it with Whisper, and reports whether the hosts speak in the script's order and where the words differ.
+- Script format: every paragraph starts with the speaker's name in capitals, `FRANK:` or `ALICE:`, and the voice is cloned from `voices/<name>.wav`. Lines starting with `#` are skipped, so `## Segment` headings are fine. Any other unlabeled paragraph stops the render, so nothing is dropped silently.
+- Write the way people talk, not the way people read aloud. The one asking reacts and pushes back ("Okay, fair. But...", "Huh. So..."), and both hosts use the odd filler, unfinished thought or "you know". VibeVoice performs these naturally. It doesn't do overlapping speech or sounds like laughter, so avoid "Ha." and the like.
+- The four demo voices in `voices/` are Alice and Maya (women) and Carter and Frank (men). A clone copies the recording's delivery as well as its sound: Alice and Carter are chatty, Frank's source is a narrated deep dive, and Maya's a technical reading (rejected as computer-like).
+- Names and acronyms: spell them the way they should sound ("Mycin" for MYCIN, which otherwise gets spelled out) or leave them for the show notes (XCON). Long strings of hard names in one sentence can derail the model, so spread them out. Moravec came out garbled in a test.
+- VibeVoice now and then puts a line in the other host's voice, garbles it or adds a stray sound (a beep, once). The renderer catches this: after each segment it transcribes the audio with Whisper, lines the words up with the script to find each line, checks each line's voice, and retakes the segment with a new seed (up to three takes) if anything is off.
+- Nobody can listen during a session, so also run `tools/check.py SCRIPT.md OUT.mp3` on the finished episode. It runs the same check over the whole file and lists any line that's missing or in the wrong voice; `--words` lists where the wording differs, which shows how names came out.
 
 ## Environment notes
 
 - Work in the "AI Pods" cloud environment. On 2026-10-21 it reached Hugging Face, PyPI, the PyTorch wheel index and raw.githubusercontent.com; github.com pages for other repos returned 403. The first session ran in "Tributary", where Hugging Face was blocked. If access is ever narrowed, the voice models need `huggingface.co` and `*.hf.co`.
 - Text-to-speech: VibeVoice-1.5B (Microsoft, MIT license, released for research), run through transformers as `vibevoice/VibeVoice-1.5B-hf` (5.4 GB, downloaded on first use). The 7B model needs 18.7 GB, more than this machine's 15 GB of memory. Run `tools/setup.sh` to build `.venv` with CPU-only PyTorch and the versions pinned in `tools/requirements.txt`. ffmpeg is preinstalled.
-- Render with `.venv/bin/python tools/render.py SCRIPT.md OUT.mp3`, adding `--voice COHOST=voices/carter.wav` to change a voice or `--seed 7` for a different take. It runs about 4.7 times slower than real time, using the CPU's bfloat16 (AMX) support, so a 20-minute episode takes about 1.5 hours: run it in the background. The first render after the container restarts is slower, since the model has to be read from disk again. It renders about 3 minutes of script at a time and caches each finished segment in `.cache/`, so an interrupted render resumes where it stopped.
+- Render with `.venv/bin/python tools/render.py SCRIPT.md OUT.mp3`, adding `--voice ALICE=voices/maya.wav` to use another recording or `--seed 7` for different takes. It runs about 4.7 times slower than real time, using the CPU's bfloat16 (AMX) support, so a 20-minute episode takes about 1.5 hours, more if segments need retakes: run it in the background. The first render after the container restarts is slower, since the model has to be read from disk again. It renders about 3 minutes of script at a time and caches each finished segment in `.cache/`, so an interrupted render resumes where it stopped. The checks use `openai/whisper-small.en` and `microsoft/wavlm-base-plus-sv`, also downloaded on first use.
 - Output is a mono MP3 at 44.1 kHz and 96 kbps, about 0.7 MB a minute. Pauses longer than 0.7 s are shortened. Each host is leveled to -19 LUFS; the renderer tells them apart by voice, since clones can come out a dB or two apart. A mono file plays 3 dB louder on two speakers, so -19 LUFS matches Apple's -16 LUFS target. A limiter keeps true peaks under Apple's -1 dBTP.
 - Kokoro-82M was tried first: fast, but it reads each line on its own and sounded computer-like. It's in the git history.
