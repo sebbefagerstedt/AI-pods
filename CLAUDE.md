@@ -15,8 +15,8 @@ A personal podcast series that teaches AI and LLM fundamentals. Episodes are wri
 - English.
 - Plain language and everyday analogies first, then the real term. Nothing should require seeing an equation.
 - Each episode builds on the earlier ones and ends with a short recap.
-- Each episode in the repo: the script with show notes (key terms, links to the original papers) and the MP3.
-- Listening happens in Apple Podcasts through an RSS feed. No GitHub Pages: this repo will be made private.
+- Each episode in the repo: the script with show notes (key terms, links to the original papers) and the MP3. Test clips go in `samples/`, episodes in `episodes/NN-slug/`.
+- For now, the MP3s just live in this repo. Later the listener will set up GitHub Pages so an RSS feed can bring the episodes into Apple Podcasts (Follow a Show by URL). The repo will become private: Pages on a private repo needs a paid GitHub plan, and the Pages site itself stays public.
 
 ## Season 1: From zero to ChatGPT
 
@@ -45,15 +45,11 @@ Possible Season 2, "Understanding the headlines": hallucinations, memory and RAG
 
 ## Next steps
 
-1. Make a ~15-second sample clip of the two hosts talking and share it in the chat for feedback on voices and tone.
+1. Make a ~15-second sample clip of the two hosts talking, commit it under `samples/`, and share it in the chat for feedback on voices and tone.
 2. Produce episodes 1–2 as a pilot; adjust depth, tone and voices before making the rest.
-
-## Open question: hosting for Apple Podcasts
-
-Apple Podcasts needs public links to the feed and every MP3, which a private repo can't give. To decide with the listener: a separate public repo holding only the audio and feed (free, but needs testing with Apple Podcasts), a cloud storage bucket such as Cloudflare R2, or a paid private-podcast host.
 
 ## Environment notes
 
 - Text-to-speech: Kokoro-82M (open-source, good English voices, runs on CPU), installed from PyPI; its model weights download from Hugging Face. ffmpeg is installed for stitching and MP3 export.
-- The cloud environment must allow `huggingface.co` and `*.hf.co` (keep the default package-manager list too). In the first session Hugging Face was blocked and PyPI worked.
+- Work in the "AI Pods" cloud environment, which has full network access. The first session ran in "Tributary", where Hugging Face was blocked and only package registries like PyPI worked. If access is ever narrowed, the voice models need `huggingface.co` and `*.hf.co`.
 - github.com is reachable only for this repo. If Kokoro's text front-end (misaki) fails to download the spaCy model `en_core_web_sm` from GitHub, install that model from Hugging Face (`spacy/en_core_web_sm`) instead.
