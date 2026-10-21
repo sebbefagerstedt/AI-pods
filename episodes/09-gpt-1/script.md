@@ -10,11 +10,11 @@ ALICE: Very boring. They gave it Amazon reviews. Eighty-two million of them. And
 
 FRANK: So, autocomplete. For product reviews.
 
-ALICE: Autocomplete for product reviews. It trained for about a month, on four graphics cards. And then they looked inside the network, at its four thousand or so artificial neurons, to see what it had picked up.
+ALICE: Autocomplete for product reviews. It trained for about a month, on four graphics cards. And then they looked inside the network, at its four thousand or so artificial neurons, the little number-crunching units it's built from, to see what it had picked up.
 
 FRANK: And?
 
-ALICE: They found one single neuron that tracked whether the review was positive or negative. As the network read a review, that neuron would go up when the writer sounded happy, and down when they got angry.
+ALICE: They found one single neuron that tracked whether the review was positive or negative. As the network read a review, that neuron would go up when the writer sounded happy, and down when they got angry. It became known as the sentiment neuron.
 
 FRANK: Wait. Nobody told it about positive and negative?
 
@@ -30,7 +30,7 @@ ALICE: And pinned at "negative": "The package received was blank and has no barc
 
 FRANK: Also a real review. Possibly mine.
 
-ALICE: So here's why this matters. About a year later, Radford and colleagues took that idea, you know, "just train a model to predict what comes next, and see what it learns along the way", and tried it with a brand-new design everyone was excited about: the transformer. The paper came out in June 2018, with a fairly dull title, "Improving Language Understanding by Generative Pre-Training". Today we call that model GPT-1.
+ALICE: So here's why this matters. About a year later, Radford and colleagues took the same idea: just train a model to predict what comes next, and see what it learns along the way. But this time they used a brand-new design that everyone was excited about, the transformer. The paper came out in June 2018, with a fairly dull title: "Improving Language Understanding by Generative Pre-Training". Today we call that model GPT-1.
 
 FRANK: The first GPT.
 
@@ -72,7 +72,7 @@ ALICE: And the next task needs a whole new pile.
 
 FRANK: A new pile and a new model. Every time.
 
-ALICE: Hang on, though. Wasn't there something you could reuse? Episode six was all about word embeddings, the "king minus man plus woman" thing. Those were learned from plain text, with no labels.
+ALICE: Hang on, though. Wasn't there something you could reuse? Episode six was all about word embeddings, the thing where "king minus man plus woman" lands you on "queen". Those were learned from plain text, with no labels.
 
 FRANK: Right, and that was the one piece people did reuse. You could download a ready-made list of numbers for every word that captured, roughly, what it means. But that only covers the very first step: turning words into numbers. Everything after that, all the layers that combine words into meaning, still started from scratch.
 
@@ -82,7 +82,7 @@ FRANK: It's like handing a newcomer a dictionary. Really useful. But knowing wha
 
 ALICE: Okay, fair. A dictionary, but no reading experience.
 
-FRANK: And meanwhile, the people working on images were way ahead. Remember ImageNet, the giant collection of labeled photos from episode five? By then, if you wanted a model to spot, say, fractures in X-rays, you didn't start from scratch. You took a network that had already been trained on ImageNet, one that had already learned edges and textures and shapes, and you fine-tuned it on your few thousand X-rays.
+FRANK: And meanwhile, the people working on images were way ahead. Remember ImageNet, the giant collection of labeled photos from episode five? By then, if you wanted a model to spot, say, fractures in X-rays, you didn't start from scratch. You took a network that had already been trained on ImageNet, one that had already learned edges and textures and shapes, and you trained it a little more on your few thousand X-rays.
 
 ALICE: So with images, you could reuse the whole network. With language, just the dictionary. Why didn't language just copy the image people?
 
@@ -118,7 +118,7 @@ ALICE: Facts. "We waited forty minutes, the soup was cold, and the waiter was ru
 
 FRANK: One star. Maybe zero.
 
-ALICE: That's mood, which is exactly what that sentiment neuron picked up. And my favorite comes from Ilya Sutskever, one of GPT-1's authors. Sutskever likes to talk about a detective novel. Hundreds of pages, a big cast of characters, clues everywhere. And on the last page, the detective gathers everyone in the room and says: "And the murderer is..."
+ALICE: That's mood, which is exactly what that sentiment neuron picked up. And my favorite comes from Ilya Sutskever, one of GPT-1's authors, who explains it with a detective novel. Hundreds of pages, a big cast of characters, clues everywhere. And on the last page, the detective gathers everyone in the room and says: "And the murderer is..."
 
 FRANK: Oh. So to guess that word...
 
@@ -134,7 +134,7 @@ ALICE: Not quite. It doesn't guess just one word. It spreads its bets across eve
 
 FRANK: And the surprise is the "how wrong" from episode two.
 
-ALICE: Exactly. That's the loss. Then all the knobs get nudged a tiny bit, that's the walking downhill in fog from episode four, so that next time it bets a little more on the word that actually came. Do that over billions of words...
+ALICE: Exactly. That's the loss. Then all the knobs get nudged a tiny bit, in whichever direction would have made the right word more likely. That's the walking downhill in fog from episode four. So next time, it bets a little more on the word that actually came. Do that over billions of words...
 
 FRANK: ...and you get a very good bettor.
 
@@ -142,7 +142,11 @@ ALICE: A very good bettor. And a model that does this, that predicts the next wo
 
 FRANK: As in large language model.
 
-ALICE: As in large language model. That's the LM in LLM. So at heart, every chatbot you've used is a very big next-word predictor. Strictly speaking it predicts tokens, the word pieces from episode six, but "next word" is close enough. And one more bit of jargon, because it's all over the paper. Learning from text that nobody labeled, the paper calls "unsupervised". These days, most people call it self-supervised, because the text supervises itself.
+ALICE: As in large language model. That's the LM in LLM. So at heart, an AI chatbot like ChatGPT is a very big next-word predictor.
+
+FRANK: Well, technically it's tokens, isn't it? The word pieces from episode six.
+
+ALICE: Technically tokens, yes. But "next word" is close enough. And one more bit of jargon, because it's all over the paper. Learning from text that nobody labeled, the paper calls "unsupervised". These days, most people call it self-supervised, because the text supervises itself.
 
 FRANK: Self-supervised. I like that better.
 
@@ -154,11 +158,11 @@ FRANK: I do. So, June 2018. OpenAI publishes the paper. Four authors, including 
 
 ALICE: Meaning it generates text?
 
-FRANK: Meaning it's trained by generating: predicting the next word, over and over. That's Alice's game. P is for pre-trained, and that's the big idea. "Pre", because this training happens before you've even decided which task you want. First, the model just reads.
+FRANK: In a way. It learns by predicting the next word, over and over, the guessing game we just played. And that same skill is what lets it write. P is for pre-trained, and that's the big idea. "Pre", because this training happens before you've even decided which task you want. First, the model just reads.
 
 ALICE: Reads what?
 
-FRANK: A collection called the Books Corpus. About seven thousand unpublished books, mostly novels: free e-books that people had put up on a self-publishing site called Smashwords.
+FRANK: A collection called the Books Corpus. About seven thousand free e-books, mostly novels, from a self-publishing site called Smashwords.
 
 ALICE: Why novels, and not, say, the news?
 
@@ -174,7 +178,7 @@ FRANK: A lot of romance. Plenty of fantasy, and a surprising number of vampires.
 
 ALICE: Wow. And the authors were okay with this?
 
-FRANK: Nobody asked them. Lots of those books said they were for the reader's personal enjoyment only. When one author heard about it later, they said it hadn't even occurred to them that a machine could read their book. And that question, whose writing these models get to learn from, is now being fought over in court.
+FRANK: Nobody asked them. Lots of those books said they were for the reader's personal enjoyment only. Back in 2016, when a reporter told one of the authors that Google was training AI on the collection, they said it hadn't even occurred to them that a machine could read their book. And that question, whose writing these models get to learn from, is now being fought over in court.
 
 ALICE: Okay. So that's G and P.
 
@@ -192,7 +196,7 @@ ALICE: And how big was it?
 
 FRANK: About a hundred and seventeen million knobs. Or parameters, as the papers say. And it could look at about five hundred tokens at a time, roughly a page of text.
 
-ALICE: A page? So it couldn't have solved Sutskever's murder mystery.
+ALICE: A page? So it couldn't have solved that murder mystery.
 
 FRANK: Not from the whole novel, no. One page at a time. Today's models can take in entire books at once, and we'll get to that in episode ten.
 
@@ -202,7 +206,11 @@ FRANK: In 2018, it was. Today's biggest models have thousands of times more. And
 
 ALICE: But why the transformer? Couldn't you do all this with the older networks?
 
-FRANK: You could, and people had. Other teams had already shown that pre-training helps, using those LSTMs. But LSTMs struggle to hold on to things from far back, and a transformer can look straight back across the whole page. The paper checked, too: same recipe with an LSTM instead, and the scores clearly dropped. Oh, and one detail you might not expect from today's OpenAI. They released the whole thing, the code and the trained model, for anyone to use.
+FRANK: You could, and people had. The recipe itself wasn't new: other teams had already made it work with LSTMs. But LSTMs struggle to hold on to things from far back, and a transformer can look straight back across the whole page. The paper checked, too: same recipe with an LSTM instead, and the scores clearly dropped.
+
+ALICE: So the T really earned its place.
+
+FRANK: It did. Oh, and one detail you might not expect from today's OpenAI. They released the trained model, with code to fine-tune it, for anyone to use.
 
 ALICE: Huh. Different times.
 
@@ -214,7 +222,7 @@ ALICE: That's step two: fine-tuning. Because a model that's great at guessing th
 
 FRANK: Nobody's paying for vampire autocomplete.
 
-ALICE: Not in 2018, anyway. So you take the pre-trained model, and you add one tiny extra piece on top. Its only job is to turn what the model has worked out into an answer, like "positive" or "negative". Then you train the whole thing a little more, on your few thousand labeled examples.
+ALICE: Not in 2018, anyway. So you take the pre-trained model, and you add one tiny extra piece on top. Its only job is to turn what the model has worked out into an answer, like "positive" or "negative". Then you train the whole thing a little more, on the labeled examples for your task.
 
 FRANK: How much more?
 
@@ -238,7 +246,7 @@ ALICE: And this is one of the cleverest bits of the paper. The usual approach wa
 
 FRANK: How?
 
-ALICE: You glue the pieces together, with a special separator in between. Sentence A, separator, sentence B. The model reads it as one passage, and the extra piece on top says "follows" or "doesn't follow". For multiple choice, you glue the story or the question to each possible answer, one at a time, the model scores each version, and the best score wins.
+ALICE: You glue the pieces together, with a special separator in between. Sentence A, separator, sentence B. The model reads it as one passage, and the extra piece on top says whether B follows from A, contradicts it, or neither. For multiple choice, you glue the story or the question to each possible answer, one at a time, the model scores each version, and the best score wins.
 
 FRANK: Give me an example.
 
@@ -258,11 +266,11 @@ ALICE: On that test, the best score before was about seventy-eight percent. GPT-
 
 FRANK: Nine out of twelve. That's not bad.
 
-ALICE: Not bad at all. Though some records were modest. On a reading test made from English exams for school kids in China, it scored fifty-nine percent, up from fifty-three.
+ALICE: Not bad at all. Though a record isn't the same as a good grade. On a reading test made from English exams for school kids in China, it scored fifty-nine percent, up from fifty-three.
 
 FRANK: Fifty-nine. I mean, that's not a great grade.
 
-ALICE: It isn't. Careful human readers get about ninety-five. So, a big jump, but still a long way from a good student.
+ALICE: It isn't. When the test's makers had paid crowdworkers take it, they averaged about seventy-three. So, a big jump, but still well behind people.
 
 FRANK: And how do we know the reading did the work? Maybe the transformer alone would have done just as well.
 
@@ -282,7 +290,7 @@ FRANK: It is. Four months after GPT-1, in October 2018, a team at Google publish
 
 ALICE: Bert. As in Sesame Street?
 
-FRANK: As in Sesame Street. Earlier that year, a lab called the Allen Institute had put out a model named Elmo. So, you know. Officially, Bert stands for Bidirectional Encoder Representations from Transformers.
+FRANK: As in Sesame Street. Earlier that year, a lab called the Allen Institute had put out a model named Elmo, which also learned from raw text. So, you know. Officially, Bert stands for Bidirectional Encoder Representations from Transformers.
 
 ALICE: That is a name somebody worked out backwards.
 
@@ -326,11 +334,11 @@ FRANK: To be fair, Bert also read all of English Wikipedia on top of the same bo
 
 ALICE: So GPT-1 got about four months at the top.
 
-FRANK: About four months. And Bert took off. Researchers everywhere built on it. And a year later, Google put it into search. In October 2019, they said Bert was helping with about one in ten English searches in the US. Their example was a search for "2019 Brazil traveler to USA need a visa".
+FRANK: About four months. And Bert took off. Researchers everywhere built on it. And a year later, Google put it into search. In October 2019, they said Bert was helping with about one in ten searches in English in America. Their example was a search for "2019 Brazil traveler to USA need a visa".
 
 ALICE: Okay...
 
-FRANK: Older systems tended to miss what little words like "to" were doing, so they'd show you results about Americans traveling to Brazil. Bert understood that "to" matters here. It's a Brazilian, going to the US.
+FRANK: Older systems tended to miss what little words like "to" were doing, so they'd show you results about Americans traveling to Brazil. Bert understood that "to" matters here. It's a Brazilian, heading to the United States.
 
 ALICE: Oh, that's a good example. One tiny word changes the whole meaning.
 
@@ -346,9 +354,9 @@ ALICE: Okay. So Bert has one big limitation. It's a brilliant reader, but it can
 
 FRANK: Why not? It knows language.
 
-ALICE: It was trained to fill in blanks inside text that already exists. Ask it to continue a story, and there's no natural way for it to do that. GPT, on the other hand, practiced exactly that: predict the next word, add it to the end, predict the next one. Writing is what it trained on.
+ALICE: It was trained to fill in blanks inside text that already exists. Ask it to continue a story, and there's no natural way for it to do that. GPT, on the other hand, learned exactly the skill writing needs: given everything so far, what comes next? To make it write, you just add its guess to the end, and ask again.
 
-FRANK: But in 2018, nobody needed a model that writes. Everyone was chasing test scores.
+FRANK: But in 2018, writing wasn't what anyone was measuring. Everyone was chasing test scores.
 
 ALICE: And on test scores, Bert was better. But the GPT-1 paper has a short section near the end that I think is the most important part of the whole thing. And it's really easy to skim past. It's called "zero-shot behaviors".
 
@@ -362,7 +370,11 @@ ALICE: You have to be a bit sneaky. For movie reviews, they took the review, add
 
 FRANK: Oh, that's clever. "Two hours of my life I'm never getting back. Very..."
 
-ALICE: "...negative." And with that trick, and no training on the task at all, it got about eighty percent of the reviews right. Not a record, but in the same range as some of the classic methods. And here's the part that stuck with me. As pre-training went on, these zero-shot scores kept climbing. Nobody was teaching the model about movie reviews, or exam questions. It was just reading novels, and getting better at those tasks along the way.
+ALICE: "...negative." And with that trick, and no training on the task at all, it got about eighty percent of the reviews right. Not a record, but in the same range as some of the classic methods. On the other tasks they tried, the scores were still pretty weak.
+
+FRANK: So, a party trick.
+
+ALICE: Kind of. But here's the part that stuck with me. As pre-training went on, these zero-shot scores kept climbing. Nobody was teaching the model about movie reviews, or exam questions. It was just reading novels, and getting better at those tasks along the way.
 
 FRANK: So the reading itself was teaching the tasks.
 
@@ -386,9 +398,13 @@ FRANK: Good news first: it's short. Twelve pages, and the last four or so are re
 
 ALICE: So the most famous name in AI isn't even in its own paper.
 
-FRANK: Not once. Next, the vocabulary. "Unsupervised pre-training" is the reading stage, learning from text that nobody labeled. "Supervised fine-tuning" is the second stage, with the labeled examples. And when it says "discriminative", it means the judging tasks, like positive or negative, as opposed to generating text.
+FRANK: Not once. Next, the vocabulary. "Unsupervised pre-training" is the reading stage, learning from text that nobody labeled. "Supervised fine-tuning" is the second stage, with the labeled examples.
 
-ALICE: Okay. And the equations?
+ALICE: Okay, those I can handle.
+
+FRANK: "Textual entailment" is the "does sentence B follow from sentence A" task. "State of the art" just means the best score so far, what we've been calling a record. And "discriminative" tasks are the judging ones, like positive or negative, as opposed to generating text.
+
+ALICE: Got it. And the equations?
 
 FRANK: There are a few, but you don't need them. The first one, the important one, just says, in symbols: make the real next word as likely as possible, given the words that came before it. That's the whole pre-training game.
 
@@ -404,13 +420,13 @@ FRANK: The training settings. Learning rates, dropout, that kind of thing. Unles
 
 ALICE: Okay, let's wrap up. Frank, do you want to start?
 
-FRANK: Sure. One: before 2018, language models were mostly trained from scratch for each task, on examples people had to label by hand. Slow, expensive, and you started over every time.
+FRANK: Sure. One: before 2018, language AI was mostly built from scratch for each task, on examples people had to label by hand. Slow, expensive, and you started over every time.
 
 ALICE: Two: next-word prediction turns any text into free practice. The text is its own answer key. And to predict well, a model has to pick up grammar, facts, mood, even plot.
 
 FRANK: Three: GPT stands for generative pre-trained transformer. GPT-1, from June 2018, spent a month reading about seven thousand books, using the writing half of the transformer.
 
-ALICE: Four: then comes fine-tuning. A short round of training on a small labeled set, with every task glued into one stretch of text. It set records on nine of twelve tests. And that two-step recipe, pre-train, then fine-tune, is still how chatbots are made.
+ALICE: Four: then comes fine-tuning. A short round of training on each task's labeled examples, with every task glued into one stretch of text. It set records on nine of twelve tests. And that two-step recipe, pre-train, then fine-tune, is still how chatbots are made.
 
 FRANK: And five: Bert, from Google, played fill-in-the-blank with the reading half of the transformer, and beat GPT on the 2018 tests. But Bert couldn't write, and GPT's zero-shot results hinted that more reading would teach it even more.
 
