@@ -10,7 +10,7 @@ A personal podcast series that teaches AI and LLM fundamentals. Episodes are wri
 
 ## Decisions
 
-- Episodes of about 20 minutes (roughly 3,000 words of script).
+- Episode length follows the content: as long as the topic needs to be explained well, without padding or rushing. Around 20 minutes is typical, not a target. Scripts run about 175 words a minute.
 - Two hosts, Frank and Alice. In each segment one explains and the other is the sharp, curious one who asks the questions the listener would ask ("wait, why does that matter?"); they swap roles from segment to segment, with a short handover ("Alice, this one's yours").
 - The series is called "From Zero to ChatGPT" in the episodes, after the season title.
 - English.
@@ -49,7 +49,7 @@ Possible Season 2, "Understanding the headlines": hallucinations, memory and RAG
 1. The first samples, made with Kokoro, sounded too computer-like. The listener likes how "The Curiosity Mix" sounds, an AI podcast that has all the hallmarks of NotebookLM's Audio Overviews: the hosts react to each other ("Right." "Exactly."), use fillers and finish each other's sentences.
 2. Switched to VibeVoice, which performs the whole conversation at once. Feedback on the first VibeVoice samples: the listener likes Frank's voice, and Maya sounds like a computer (her source recording is a flat technical reading).
 3. The listener picked Frank and Alice and asked them to swap roles during episodes. (They also offered to record their own voice; see `voices/README.md` if that comes up again.)
-4. Done: episode 1 in `episodes/01-what-is-ai/` (17 minutes; segments 2 and 5 needed a second take). Waiting for the listener's feedback, then episode 2, then the rest. Scripts run about 175 words a minute, so aim for about 3,500 words to reach 20 minutes.
+4. Done: episode 1 in `episodes/01-what-is-ai/` (17 minutes; segments 2 and 5 needed a second take). Waiting for the listener's feedback, then episode 2, then the rest.
 
 ## Scripts and voices
 
