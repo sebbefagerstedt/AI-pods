@@ -15,7 +15,7 @@ Headings (lines starting with #) are skipped:
 Set up the venv with tools/setup.sh, then:
 
     .venv/bin/python tools/render.py samples/sample.md samples/sample.mp3
-    .venv/bin/python tools/render.py script.md out.mp3 --voice COHOST=voices/frank.wav
+    .venv/bin/python tools/render.py script.md out.mp3 --voice COHOST=voices/carter.wav
 
 It runs about 5 times slower than real time on 4 CPUs. Finished segments are
 cached in .cache/, so a render that gets interrupted picks up where it stopped.
@@ -38,15 +38,22 @@ warnings.filterwarnings("ignore")  # deprecation noise from torch and transforme
 import numpy as np
 import soundfile as sf
 import torch
-from transformers import AutoModelForTextToWaveform, AutoProcessor, set_seed
+from transformers import AutoFeatureExtractor, AutoModelForTextToWaveform, AutoProcessor, WavLMForXVector, set_seed
 from transformers.utils import logging
+
+logging.set_verbosity_error()
+logging.disable_progress_bar()
 
 ROOT = Path(__file__).resolve().parent.parent
 MODEL = "vibevoice/VibeVoice-1.5B-hf"
+SPEAKER_MODEL = "microsoft/wavlm-base-plus-sv"  # tells the hosts apart by their voices
 RATE = 24000  # VibeVoice's sample rate
-VOICES = {"HOST": ROOT / "voices/alice.wav", "COHOST": ROOT / "voices/carter.wav"}  # explainer, co-host
+VOICES = {"HOST": ROOT / "voices/frank.wav", "COHOST": ROOT / "voices/alice.wav"}  # explainer, co-host
 SEGMENT_CHARS = 3000  # about 3 minutes of speech per generation
 LONGEST_PAUSE = 0.7  # seconds; the model sometimes leaves longer gaps between turns
+MIN_GAP = 0.15  # seconds of quiet that end a stretch of speech
+MIN_VOICE = 0.5  # seconds of audio the speaker model needs
+CONFIDENT = 0.2  # how much closer a stretch must sound to one voice than the other to count
 LUFS = -19  # Apple asks for -16; a mono file plays 3 dB louder on two speakers
 PEAK = -2.5  # limiter ceiling in dBFS, leaving room for MP3 overshoot under Apple's -1
 CACHE = ROOT / ".cache" / "segments"
@@ -81,9 +88,9 @@ def segments(turns):
     return groups
 
 
-def load_voice(path):
-    """Read a recording as 24 kHz mono, the format VibeVoice clones from."""
-    pcm = subprocess.run(["ffmpeg", "-v", "error", "-i", str(path), "-ac", "1", "-ar", str(RATE), "-f", "f32le", "-"],
+def load_audio(path, rate=RATE):
+    """Read any audio file as mono samples at `rate`."""
+    pcm = subprocess.run(["ffmpeg", "-v", "error", "-i", str(path), "-ac", "1", "-ar", str(rate), "-f", "f32le", "-"],
                          capture_output=True, check=True).stdout
     return np.frombuffer(pcm, dtype=np.float32).copy()
 
@@ -103,7 +110,7 @@ def synthesize(segment, voices, seed, processor, model):
         content = [{"type": "text", "text": text}]
         if speaker not in roles:  # number speakers by first appearance; give each its voice once
             roles[speaker] = str(len(roles))
-            content.append({"type": "audio", "audio": load_voice(voices[speaker])})
+            content.append({"type": "audio", "audio": load_audio(voices[speaker])})
         conversation.append({"role": roles[speaker], "content": content})
     inputs = processor.apply_chat_template(
         conversation, return_dict=True, tokenize=True, add_generation_prompt=True
@@ -120,11 +127,17 @@ def silence(seconds):
     return np.zeros(int(seconds * RATE), dtype=np.float32)
 
 
+def quiet_frames(audio, rate):
+    """Split audio into 20 ms frames; return the frame length and which frames are quiet."""
+    n = int(0.02 * rate)
+    db = 20 * np.log10(np.abs(audio[: len(audio) // n * n]).reshape(-1, n).max(axis=1) + 1e-9)
+    return n, db < np.percentile(db, 95) - 35
+
+
 def cap_pauses(audio):
     """Shorten silences longer than LONGEST_PAUSE to that length, cutting out their middle."""
-    n = int(0.02 * RATE)  # 20 ms frames
-    db = 20 * np.log10(np.abs(audio[: len(audio) // n * n]).reshape(-1, n).max(axis=1) + 1e-9)
-    quiet = np.append(db < np.percentile(db, 95) - 35, False)
+    n, quiet = quiet_frames(audio, RATE)
+    quiet = np.append(quiet, False)
     half, fade = int(LONGEST_PAUSE / 2 * RATE), int(0.01 * RATE)
     pieces, cut, start = [], 0, None
     for i, q in enumerate(quiet):
@@ -141,6 +154,83 @@ def cap_pauses(audio):
         a[-fade:] *= ramp
         b[:fade] *= ramp[::-1]
     return np.concatenate(pieces)
+
+
+def stretches(audio, rate):
+    """Split audio at pauses of at least MIN_GAP into (start, end) sample ranges of speech."""
+    n, quiet = quiet_frames(audio, rate)
+    spans, start, last = [], None, 0
+    for i, q in enumerate(quiet):
+        if not q:
+            if start is None:
+                start = i
+            last = i
+        elif start is not None and (i - last) * 0.02 >= MIN_GAP:
+            spans.append((start * n, (last + 1) * n))
+            start = None
+    if start is not None:
+        spans.append((start * n, (last + 1) * n))
+    return [(a, b) for a, b in spans if b - a >= 0.3 * rate]
+
+
+def voice_matcher(voices):
+    """Return a function that scores 16 kHz audio against each speaker's voice, from 0 to 1.
+
+    It returns None for audio too short to tell.
+    """
+    extractor = AutoFeatureExtractor.from_pretrained(SPEAKER_MODEL)
+    model = WavLMForXVector.from_pretrained(SPEAKER_MODEL).eval()
+
+    def embed(audio):
+        with torch.inference_mode():
+            inputs = extractor(audio, sampling_rate=16000, return_tensors="pt")
+            return torch.nn.functional.normalize(model(**inputs).embeddings[0], dim=-1)
+
+    references = {speaker: embed(load_audio(path, 16000)) for speaker, path in voices.items()}
+
+    def score(audio):
+        if len(audio) < MIN_VOICE * 16000:
+            return None
+        voice = embed(audio)
+        return {speaker: float(voice @ ref) for speaker, ref in references.items()}
+
+    return score
+
+
+def closest(scores):
+    """The speaker a stretch clearly sounds like, or None if it's too short or too close to call."""
+    if not scores:
+        return None
+    ranked = sorted(scores, key=scores.get, reverse=True)
+    if len(ranked) == 1 or scores[ranked[0]] - scores[ranked[1]] >= CONFIDENT:
+        return ranked[0]
+    return None
+
+
+def level_speakers(audio, voices):
+    """Bring each host to the target loudness, telling who speaks each stretch by voice.
+
+    Clones can come out a dB or two apart. The gain only changes in the pauses
+    between stretches.
+    """
+    score = voice_matcher(voices)
+    with as_wav(audio) as wav:
+        audio16 = load_audio(wav, 16000)
+    spans = stretches(audio, RATE)
+    labels = [closest(score(audio16[a * 2 // 3 : b * 2 // 3])) for a, b in spans]
+    known = [label for label in labels if label]
+    if not known:
+        return audio * 10 ** ((LUFS - loudness(audio)) / 20)
+    previous = known[0]
+    for i, label in enumerate(labels):  # a stretch too short to tell goes with the one before
+        labels[i] = previous = label or previous
+    gain = {}
+    for speaker in set(labels):
+        lufs = loudness(np.concatenate([audio[a:b] for (a, b), label in zip(spans, labels) if label == speaker]))
+        gain[speaker] = 10 ** ((LUFS - lufs) / 20) if np.isfinite(lufs) else 1.0
+    points = [x for span in spans for x in span]
+    gains = [gain[label] for label in labels for _ in range(2)]
+    return audio * np.interp(np.arange(len(audio)), points, gains).astype(np.float32)
 
 
 def ffmpeg(*args):
@@ -166,9 +256,15 @@ def loudness(audio):
 
 
 def export(audio, path, title):
-    """Catch the peaks the loudness gain pushed too high, and encode a mono MP3."""
+    """Catch the peaks the loudness gain pushed too high, and encode a mono MP3.
+
+    The limiter shaves a little loudness off, so measure how much and make it up first.
+    """
     limiter = f"alimiter=limit={10 ** (PEAK / 20):.3f}:level=disabled:latency=1"
     with as_wav(audio) as wav:
+        log = ffmpeg("-i", wav, "-af", f"{limiter},loudnorm=print_format=json", "-f", "null", "-")
+    shortfall = LUFS - float(json.loads(log[log.rindex("{") :])["input_i"])
+    with as_wav(audio * 10 ** (shortfall / 20)) as wav:
         ffmpeg("-y", "-i", wav, "-af", limiter, "-ar", "44100", "-ac", "1",
                "-c:a", "libmp3lame", "-b:a", "96k", "-id3v2_version", "3",
                "-metadata", f"title={title}", str(path))
@@ -180,21 +276,20 @@ def main():
     parser.add_argument("mp3", help="output file")
     parser.add_argument("--voice", action="append", default=[], metavar="SPEAKER=WAV",
                         help="clone a speaker's voice from this recording "
-                             "(defaults: HOST=voices/alice.wav, COHOST=voices/carter.wav)")
+                             "(defaults: HOST=voices/frank.wav, COHOST=voices/alice.wav)")
     parser.add_argument("--seed", type=int, default=42, help="change it to get a different take")
     parser.add_argument("--title", help="MP3 title tag (default: output file name)")
     args = parser.parse_args()
 
     voices = VOICES | dict(v.split("=", 1) for v in args.voice)
-    groups = segments(parse(args.script, voices))
+    turns = parse(args.script, voices)
+    groups = segments(turns)
     start = time.time()
     parts, processor, model = [], None, None
     for n, segment in enumerate(groups, 1):
         path = cache_path(segment, voices, args.seed)
         if not path.exists():
             if model is None:
-                logging.set_verbosity_error()
-                logging.disable_progress_bar()
                 processor = AutoProcessor.from_pretrained(MODEL)
                 model = AutoModelForTextToWaveform.from_pretrained(MODEL, dtype=torch.bfloat16).eval()
             CACHE.mkdir(parents=True, exist_ok=True)
@@ -205,8 +300,9 @@ def main():
         print(f"[{n}/{len(groups)}] {len(parts[-1]) / RATE:.0f} s of audio, {time.time() - start:.0f} s so far",
               flush=True)
 
-    audio = cap_pauses(np.concatenate(parts))
-    audio = np.concatenate([audio * 10 ** ((LUFS - loudness(audio)) / 20), silence(0.8)])
+    used = {speaker: voices[speaker] for speaker in sorted({s for s, _ in turns})}
+    audio = level_speakers(cap_pauses(np.concatenate(parts)), used)
+    audio = np.concatenate([audio, silence(0.8)])
     export(audio, args.mp3, args.title or Path(args.mp3).stem)
     print(f"Wrote {args.mp3}: {len(audio) / RATE:.1f} s of audio in {time.time() - start:.0f} s")
 
