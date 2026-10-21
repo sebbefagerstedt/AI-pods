@@ -45,13 +45,20 @@ Possible Season 2, "Understanding the headlines": hallucinations, memory and RAG
 
 ## Status and next steps
 
-Nothing has been recorded yet. The first session ran in the "Tributary" environment, which couldn't reach the voice models, so work continues in a new chat that uses the "AI Pods" environment.
-
-1. Make a ~15-second sample clip of the two hosts talking, commit it under `samples/`, and share it in the chat for feedback on voices and tone.
+1. Done: three sample clips (about 17 seconds each) in `samples/`, all speaking the lines in `samples/sample.md`. af_heart explains in all three; the co-host is am_michael, am_fenrir or am_puck. Waiting for the listener's feedback on voices and tone.
 2. Produce episodes 1–2 as a pilot; adjust depth, tone and voices before making the rest.
+
+## Scripts and voices
+
+- Script format: every paragraph starts with a speaker label, `HOST:` (the explainer) or `COHOST:`. Lines starting with `#` are skipped. Any other unlabeled paragraph stops the render, so nothing is dropped silently.
+- Voice grades (Kokoro's VOICES.md): the best voices are female, af_heart (A) and af_bella (A-); the male voices top out at C+ (am_michael, am_fenrir, am_puck). The defaults give the explainer, who carries most of the words, af_heart, and the co-host am_michael. Different genders make the hosts easy to tell apart by ear.
+- Voices are weaker on very short inputs, so give the co-host at least a short sentence rather than a lone "Right." The renderer merges short sentences within a turn and splits long turns into groups of about 200 characters, since voices rush on long inputs.
+- Check pronunciation before rendering by printing phonemes (`KPipeline(lang_code="a", repo_id="hexgrad/Kokoro-82M", model=False)`), and fix a word inline with Kokoro's syntax, e.g. `[Kokoro](/kˈOkəɹO/)`. AI, LLM, ChatGPT, Turing, Dartmouth, Nvidia and years like 1956 already come out right.
+- Nobody can listen during a session, so check a render by transcribing it with Whisper (`openai/whisper-base.en` through transformers) and comparing the text with the script.
 
 ## Environment notes
 
-- Text-to-speech: Kokoro-82M (open-source, good English voices, runs on CPU), installed from PyPI; its model weights download from Hugging Face. ffmpeg is installed for stitching and MP3 export.
-- Work in the "AI Pods" cloud environment, which has full network access. The first session ran in "Tributary", where Hugging Face was blocked and only package registries like PyPI worked. If access is ever narrowed, the voice models need `huggingface.co` and `*.hf.co`.
-- github.com is reachable only for this repo. If Kokoro's text front-end (misaki) fails to download the spaCy model `en_core_web_sm` from GitHub, install that model from Hugging Face (`spacy/en_core_web_sm`) instead.
+- Work in the "AI Pods" cloud environment. On 2026-10-21 it reached Hugging Face, PyPI, the PyTorch wheel index and GitHub release downloads. The first session ran in "Tributary", where Hugging Face was blocked. If access is ever narrowed, the voice models need `huggingface.co` and `*.hf.co`.
+- Text-to-speech: Kokoro-82M (open-source, runs on CPU); its model weights download from Hugging Face on first use. Run `tools/setup.sh` to build `.venv`. Kokoro needs Python 3.10–3.12 (the system Python is 3.13, so the script uses `/usr/bin/python3.12` through uv). The script installs CPU-only PyTorch and the versions pinned in `tools/requirements.txt`, then the spaCy model `en_core_web_sm` from GitHub, falling back to Hugging Face. ffmpeg is preinstalled.
+- Render a script with `.venv/bin/python tools/render.py SCRIPT.md OUT.mp3`, adding `--voice COHOST=am_puck` or `--speed 0.95` to change a voice or the pace. It runs 3–4 times faster than real time on 4 CPUs, so a 20-minute episode takes 5–7 minutes.
+- Output is a mono MP3 at 44.1 kHz and 96 kbps, about 0.7 MB a minute. Each host is leveled to -19 LUFS: a mono file plays 3 dB louder on two speakers, so this matches Apple's -16 LUFS target. A limiter keeps true peaks under Apple's -1 dBTP.
