@@ -45,20 +45,23 @@ Possible Season 2, "Understanding the headlines": hallucinations, memory and RAG
 
 ## Status and next steps
 
-1. Done: three sample clips (about 17 seconds each) in `samples/`, all speaking the lines in `samples/sample.md`. af_heart explains in all three; the co-host is am_michael, am_fenrir or am_puck. Waiting for the listener's feedback on voices and tone.
-2. Produce episodes 1–2 as a pilot; adjust depth, tone and voices before making the rest.
+1. The first samples, made with Kokoro, sounded too computer-like. The listener likes how "The Curiosity Mix" sounds, an AI podcast that has all the hallmarks of NotebookLM's Audio Overviews: the hosts react to each other ("Right." "Exactly."), use fillers and finish each other's sentences.
+2. Done: switched to VibeVoice, which performs the whole conversation at once. Two samples of the lines in `samples/sample.md`: Alice explains and Carter asks, or Maya explains and Frank asks. Waiting for the listener's pick. They may record their own voice for one host (see `voices/README.md`). When a recording arrives, convert it to WAV in `voices/`, render the sample with it and run the check.
+3. Produce episodes 1–2 as a pilot; adjust depth, tone and voices before making the rest.
 
 ## Scripts and voices
 
 - Script format: every paragraph starts with a speaker label, `HOST:` (the explainer) or `COHOST:`. Lines starting with `#` are skipped. Any other unlabeled paragraph stops the render, so nothing is dropped silently.
-- Voice grades (Kokoro's VOICES.md): the best voices are female, af_heart (A) and af_bella (A-); the male voices top out at C+ (am_michael, am_fenrir, am_puck). The defaults give the explainer, who carries most of the words, af_heart, and the co-host am_michael. Different genders make the hosts easy to tell apart by ear.
-- Voices are weaker on very short inputs, so give the co-host at least a short sentence rather than a lone "Right." The renderer merges short sentences within a turn and splits long turns into groups of about 200 characters, since voices rush on long inputs.
-- Check pronunciation before rendering by printing phonemes (`KPipeline(lang_code="a", repo_id="hexgrad/Kokoro-82M", model=False)`), and fix a word inline with Kokoro's syntax, e.g. `[Kokoro](/kˈOkəɹO/)`. AI, LLM, ChatGPT, Turing, Dartmouth, Nvidia and years like 1956 already come out right.
-- Nobody can listen during a session, so check a render by transcribing it with Whisper (`openai/whisper-base.en` through transformers) and comparing the text with the script.
+- Write the way people talk, not the way people read aloud. The co-host reacts and pushes back ("Okay, fair. But...", "Huh. So..."), and both hosts use the odd filler, unfinished thought or "you know". VibeVoice performs these naturally. It doesn't do overlapping speech or sounds like laughter.
+- Voices are cloned from recordings in `voices/`. The four demo voices are Alice and Maya (women) and Carter and Frank (men); the defaults are Alice explaining and Carter asking. A clone copies the recording's delivery as well as its sound: Alice and Carter are chatty, Maya's source is a technical reading and Frank's a narrated deep dive.
+- If a word comes out wrong, respell it the way it sounds.
+- Nobody can listen during a session, so check every render with `tools/check.py`. It transcribes the MP3 with Whisper, labels each stretch with the closest host voice, and lists where the transcript differs from the script.
+- Known issue: in each pairing one host comes out about 1.7 dB louder (Carter over Alice, Maya over Frank). Leveling them would mean splitting the audio by speaker first.
 
 ## Environment notes
 
-- Work in the "AI Pods" cloud environment. On 2026-10-21 it reached Hugging Face, PyPI, the PyTorch wheel index and GitHub release downloads. The first session ran in "Tributary", where Hugging Face was blocked. If access is ever narrowed, the voice models need `huggingface.co` and `*.hf.co`.
-- Text-to-speech: Kokoro-82M (open-source, runs on CPU); its model weights download from Hugging Face on first use. Run `tools/setup.sh` to build `.venv`. Kokoro needs Python 3.10–3.12 (the system Python is 3.13, so the script uses `/usr/bin/python3.12` through uv). The script installs CPU-only PyTorch and the versions pinned in `tools/requirements.txt`, then the spaCy model `en_core_web_sm` from GitHub, falling back to Hugging Face. ffmpeg is preinstalled.
-- Render a script with `.venv/bin/python tools/render.py SCRIPT.md OUT.mp3`, adding `--voice COHOST=am_puck` or `--speed 0.95` to change a voice or the pace. It runs 3–4 times faster than real time on 4 CPUs, so a 20-minute episode takes 5–7 minutes.
-- Output is a mono MP3 at 44.1 kHz and 96 kbps, about 0.7 MB a minute. Each host is leveled to -19 LUFS: a mono file plays 3 dB louder on two speakers, so this matches Apple's -16 LUFS target. A limiter keeps true peaks under Apple's -1 dBTP.
+- Work in the "AI Pods" cloud environment. On 2026-10-21 it reached Hugging Face, PyPI, the PyTorch wheel index and raw.githubusercontent.com; github.com pages for other repos returned 403. The first session ran in "Tributary", where Hugging Face was blocked. If access is ever narrowed, the voice models need `huggingface.co` and `*.hf.co`.
+- Text-to-speech: VibeVoice-1.5B (Microsoft, MIT license, released for research), run through transformers as `vibevoice/VibeVoice-1.5B-hf` (5.4 GB, downloaded on first use). The 7B model needs 18.7 GB, more than this machine's 15 GB of memory. Run `tools/setup.sh` to build `.venv` with CPU-only PyTorch and the versions pinned in `tools/requirements.txt`. ffmpeg is preinstalled.
+- Render with `.venv/bin/python tools/render.py SCRIPT.md OUT.mp3`, adding `--voice COHOST=voices/frank.wav` to change a voice or `--seed 7` for a different take. It runs about 4.7 times slower than real time, using the CPU's bfloat16 (AMX) support, so a 20-minute episode takes about 1.5 hours: run it in the background. It renders about 3 minutes of script at a time and caches each finished segment in `.cache/`, so an interrupted render resumes where it stopped.
+- Output is a mono MP3 at 44.1 kHz and 96 kbps, about 0.7 MB a minute. Pauses longer than 0.7 s are shortened. The mix is leveled to -19 LUFS: a mono file plays 3 dB louder on two speakers, so this matches Apple's -16 LUFS target. A limiter keeps true peaks under Apple's -1 dBTP.
+- Kokoro-82M was tried first: fast, but it reads each line on its own and sounded computer-like. It's in the git history.

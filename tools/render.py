@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-"""Turn a two-host script into a podcast MP3 with Kokoro text-to-speech.
+"""Turn a two-host script into a podcast MP3 with VibeVoice.
+
+VibeVoice performs the whole conversation at once, so the hosts react to each
+other the way people talking do. Each host's voice is cloned from a short
+recording in voices/.
 
 Every paragraph of the script starts with a speaker label, plain or bold.
 Headings (lines starting with #) are skipped:
@@ -11,10 +15,14 @@ Headings (lines starting with #) are skipped:
 Set up the venv with tools/setup.sh, then:
 
     .venv/bin/python tools/render.py samples/sample.md samples/sample.mp3
-    .venv/bin/python tools/render.py script.md out.mp3 --voice COHOST=am_puck
+    .venv/bin/python tools/render.py script.md out.mp3 --voice COHOST=voices/frank.wav
+
+It runs about 5 times slower than real time on 4 CPUs. Finished segments are
+cached in .cache/, so a render that gets interrupted picks up where it stopped.
 """
 
 import argparse
+import hashlib
 import json
 import re
 import subprocess
@@ -25,17 +33,23 @@ import warnings
 from contextlib import contextmanager
 from pathlib import Path
 
+warnings.filterwarnings("ignore")  # deprecation noise from torch and transformers
+
 import numpy as np
 import soundfile as sf
+import torch
+from transformers import AutoModelForTextToWaveform, AutoProcessor, set_seed
+from transformers.utils import logging
 
-REPO_ID = "hexgrad/Kokoro-82M"
-RATE = 24000  # Kokoro's sample rate
-VOICES = {"HOST": "af_heart", "COHOST": "am_michael"}  # explainer, co-host
-TURN_GAP = 0.4  # seconds of silence between paragraphs
-SENTENCE_GAP = 0.25  # between the sentence groups a paragraph is split into
-GROUP_CHARS = 200  # voices rush on long inputs; ~200 characters is their sweet spot
+ROOT = Path(__file__).resolve().parent.parent
+MODEL = "vibevoice/VibeVoice-1.5B-hf"
+RATE = 24000  # VibeVoice's sample rate
+VOICES = {"HOST": ROOT / "voices/alice.wav", "COHOST": ROOT / "voices/carter.wav"}  # explainer, co-host
+SEGMENT_CHARS = 3000  # about 3 minutes of speech per generation
+LONGEST_PAUSE = 0.7  # seconds; the model sometimes leaves longer gaps between turns
 LUFS = -19  # Apple asks for -16; a mono file plays 3 dB louder on two speakers
 PEAK = -2.5  # limiter ceiling in dBFS, leaving room for MP3 overshoot under Apple's -1
+CACHE = ROOT / ".cache" / "segments"
 LABEL = re.compile(r"\**([A-Z]+):\**\s*(.+)")
 
 
@@ -57,60 +71,76 @@ def parse(path, voices):
     return turns
 
 
-def sentence_groups(text):
-    """Split text at sentence ends into groups of about GROUP_CHARS.
-
-    Very short sentences join their neighbor, since voices are also weak on
-    tiny inputs.
-    """
-    groups = []
-    for sentence in re.split(r"(?<=[.!?])\s+", text):
-        if groups and (len(groups[-1]) + len(sentence) < GROUP_CHARS or len(sentence) < 40):
-            groups[-1] += " " + sentence
-        else:
-            groups.append(sentence)
+def segments(turns):
+    """Group turns into runs of about SEGMENT_CHARS, each generated in one go."""
+    groups = [[]]
+    for turn in turns:
+        if groups[-1] and sum(len(text) for _, text in groups[-1]) + len(turn[1]) > SEGMENT_CHARS:
+            groups.append([])
+        groups[-1].append(turn)
     return groups
+
+
+def load_voice(path):
+    """Read a recording as 24 kHz mono, the format VibeVoice clones from."""
+    pcm = subprocess.run(["ffmpeg", "-v", "error", "-i", str(path), "-ac", "1", "-ar", str(RATE), "-f", "f32le", "-"],
+                         capture_output=True, check=True).stdout
+    return np.frombuffer(pcm, dtype=np.float32).copy()
+
+
+def cache_path(segment, voices, seed):
+    """Where a segment's audio is cached; changing its text, a voice or the seed misses."""
+    used = sorted({speaker for speaker, _ in segment})
+    voice_hashes = [hashlib.sha1(Path(voices[speaker]).read_bytes()).hexdigest() for speaker in used]
+    key = json.dumps([MODEL, seed, segment, voice_hashes])
+    return CACHE / f"{hashlib.sha1(key.encode()).hexdigest()}.wav"
+
+
+def synthesize(segment, voices, seed, processor, model):
+    """Perform one segment of the conversation, cloning each speaker's voice."""
+    roles, conversation = {}, []
+    for speaker, text in segment:
+        content = [{"type": "text", "text": text}]
+        if speaker not in roles:  # number speakers by first appearance; give each its voice once
+            roles[speaker] = str(len(roles))
+            content.append({"type": "audio", "audio": load_voice(voices[speaker])})
+        conversation.append({"role": roles[speaker], "content": content})
+    inputs = processor.apply_chat_template(
+        conversation, return_dict=True, tokenize=True, add_generation_prompt=True
+    ).to(model.device, model.dtype)
+    set_seed(seed)
+    with torch.inference_mode():
+        audio = model.generate(**inputs)[0]
+    if audio is None:
+        sys.exit("VibeVoice generated no audio")
+    return audio.float().numpy().squeeze()
 
 
 def silence(seconds):
     return np.zeros(int(seconds * RATE), dtype=np.float32)
 
 
-def join(clips, gap):
-    """Concatenate clips with `gap` seconds of silence between them."""
-    out = [clips[0]]
-    for clip in clips[1:]:
-        out += [silence(gap), clip]
-    return np.concatenate(out)
-
-
-def trim(audio, floor_db=-60):
-    """Cut Kokoro's padding, keeping 30 ms before and 80 ms after the speech."""
-    loud = np.flatnonzero(np.abs(audio) > 10 ** (floor_db / 20))
-    if not loud.size:
-        return audio[:0]
-    return audio[max(loud[0] - int(0.03 * RATE), 0) : loud[-1] + int(0.08 * RATE)]
-
-
-def synthesize(turns, voices, speed):
-    """Render each turn with its speaker's voice."""
-    warnings.filterwarnings("ignore")  # deprecation noise from torch and transformers
-    from kokoro import KModel, KPipeline
-    from loguru import logger
-
-    logger.remove()  # Kokoro logs every chunk at debug level
-    logger.add(sys.stderr, level="WARNING")
-    model = KModel(repo_id=REPO_ID).eval()
-    pipelines = {}  # one per accent: "a" American, "b" British English
-    clips = []
-    for n, (speaker, text) in enumerate(turns, 1):
-        voice = voices[speaker]
-        if voice[0] not in pipelines:
-            pipelines[voice[0]] = KPipeline(lang_code=voice[0], repo_id=REPO_ID, model=model)
-        pieces = pipelines[voice[0]]("\n".join(sentence_groups(text)), voice=voice, speed=speed)
-        clips.append(join([trim(piece.audio.numpy()) for piece in pieces], SENTENCE_GAP))
-        print(f"[{n}/{len(turns)}] {speaker}: {text[:60]}", flush=True)
-    return clips
+def cap_pauses(audio):
+    """Shorten silences longer than LONGEST_PAUSE to that length, cutting out their middle."""
+    n = int(0.02 * RATE)  # 20 ms frames
+    db = 20 * np.log10(np.abs(audio[: len(audio) // n * n]).reshape(-1, n).max(axis=1) + 1e-9)
+    quiet = np.append(db < np.percentile(db, 95) - 35, False)
+    half, fade = int(LONGEST_PAUSE / 2 * RATE), int(0.01 * RATE)
+    pieces, cut, start = [], 0, None
+    for i, q in enumerate(quiet):
+        if q and start is None:
+            start = i * n
+        elif not q and start is not None:
+            if i * n - start > 2 * half:
+                pieces.append(audio[cut : start + half])
+                cut = i * n - half
+            start = None
+    pieces.append(audio[cut:])
+    ramp = np.linspace(1, 0, fade, dtype=np.float32)
+    for a, b in zip(pieces, pieces[1:]):  # fade across each cut so it can't click
+        a[-fade:] *= ramp
+        b[:fade] *= ramp[::-1]
+    return np.concatenate(pieces)
 
 
 def ffmpeg(*args):
@@ -135,15 +165,6 @@ def loudness(audio):
     return float(json.loads(log[log.rindex("{") :])["input_i"])
 
 
-def balance(turns, clips):
-    """Bring every speaker to the target loudness, so neither host sounds farther away."""
-    for speaker in {s for s, _ in turns}:
-        mine = [i for i, (s, _) in enumerate(turns) if s == speaker]
-        gain = 10 ** ((LUFS - loudness(np.concatenate([clips[i] for i in mine]))) / 20)
-        for i in mine:
-            clips[i] = clips[i] * gain
-
-
 def export(audio, path, title):
     """Catch the peaks the loudness gain pushed too high, and encode a mono MP3."""
     limiter = f"alimiter=limit={10 ** (PEAK / 20):.3f}:level=disabled:latency=1"
@@ -154,21 +175,38 @@ def export(audio, path, title):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Render a two-host script to MP3 with Kokoro.")
+    parser = argparse.ArgumentParser(description="Render a two-host script to MP3 with VibeVoice.")
     parser.add_argument("script", help="Markdown script, one speaker-labeled paragraph per turn")
     parser.add_argument("mp3", help="output file")
-    parser.add_argument("--voice", action="append", default=[], metavar="SPEAKER=VOICE",
-                        help=f"override a voice (defaults: {VOICES})")
-    parser.add_argument("--speed", type=float, default=1.0, help="speaking rate (default 1.0)")
+    parser.add_argument("--voice", action="append", default=[], metavar="SPEAKER=WAV",
+                        help="clone a speaker's voice from this recording "
+                             "(defaults: HOST=voices/alice.wav, COHOST=voices/carter.wav)")
+    parser.add_argument("--seed", type=int, default=42, help="change it to get a different take")
     parser.add_argument("--title", help="MP3 title tag (default: output file name)")
     args = parser.parse_args()
 
     voices = VOICES | dict(v.split("=", 1) for v in args.voice)
-    turns = parse(args.script, voices)
+    groups = segments(parse(args.script, voices))
     start = time.time()
-    clips = synthesize(turns, voices, args.speed)
-    balance(turns, clips)
-    audio = np.concatenate([silence(0.3), join(clips, TURN_GAP), silence(0.8)])
+    parts, processor, model = [], None, None
+    for n, segment in enumerate(groups, 1):
+        path = cache_path(segment, voices, args.seed)
+        if not path.exists():
+            if model is None:
+                logging.set_verbosity_error()
+                logging.disable_progress_bar()
+                processor = AutoProcessor.from_pretrained(MODEL)
+                model = AutoModelForTextToWaveform.from_pretrained(MODEL, dtype=torch.bfloat16).eval()
+            CACHE.mkdir(parents=True, exist_ok=True)
+            partial = path.with_suffix(".partial.wav")
+            sf.write(partial, synthesize(segment, voices, args.seed, processor, model), RATE)
+            partial.replace(path)
+        parts.append(sf.read(path, dtype="float32")[0])
+        print(f"[{n}/{len(groups)}] {len(parts[-1]) / RATE:.0f} s of audio, {time.time() - start:.0f} s so far",
+              flush=True)
+
+    audio = cap_pauses(np.concatenate(parts))
+    audio = np.concatenate([audio * 10 ** ((LUFS - loudness(audio)) / 20), silence(0.8)])
     export(audio, args.mp3, args.title or Path(args.mp3).stem)
     print(f"Wrote {args.mp3}: {len(audio) / RATE:.1f} s of audio in {time.time() - start:.0f} s")
 
