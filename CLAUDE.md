@@ -49,7 +49,7 @@ Possible Season 2, "Understanding the headlines": hallucinations, memory and RAG
 1. The first samples, made with Kokoro, sounded too computer-like. The listener likes how "The Curiosity Mix" sounds, an AI podcast that has all the hallmarks of NotebookLM's Audio Overviews: the hosts react to each other ("Right." "Exactly."), use fillers and finish each other's sentences.
 2. Switched to VibeVoice, which performs the whole conversation at once. Feedback on the first VibeVoice samples: the listener likes Frank's voice, and Maya sounds like a computer (her source recording is a flat technical reading).
 3. The listener picked Frank and Alice and asked them to swap roles during episodes. (They also offered to record their own voice; see `voices/README.md` if that comes up again.)
-4. In progress: episode 1 in `episodes/01-what-is-ai/`, written and rendering. Next, the listener's feedback on it, then episode 2, then the rest.
+4. Done: episode 1 in `episodes/01-what-is-ai/` (17 minutes; segments 2 and 5 needed a second take). Waiting for the listener's feedback, then episode 2, then the rest. Scripts run about 175 words a minute, so aim for about 3,500 words to reach 20 minutes.
 
 ## Scripts and voices
 
@@ -58,7 +58,7 @@ Possible Season 2, "Understanding the headlines": hallucinations, memory and RAG
 - The four demo voices in `voices/` are Alice and Maya (women) and Carter and Frank (men). A clone copies the recording's delivery as well as its sound: Alice and Carter are chatty, Frank's source is a narrated deep dive, and Maya's a technical reading (rejected as computer-like).
 - Names and acronyms: spell them the way they should sound ("Mycin" for MYCIN, which otherwise gets spelled out) or leave them for the show notes (XCON). Long strings of hard names in one sentence can derail the model, so spread them out. Moravec came out garbled in a test.
 - VibeVoice now and then puts a line in the other host's voice, garbles it or adds a stray sound (a beep, once). The renderer catches this: after each segment it transcribes the audio with Whisper, lines the words up with the script to find each line, checks each line's voice, and retakes the segment with a new seed (up to three takes) if anything is off.
-- Nobody can listen during a session, so also run `tools/check.py SCRIPT.md OUT.mp3` on the finished episode. It runs the same check over the whole file and lists any line that's missing or in the wrong voice; `--words` lists where the wording differs, which shows how names came out.
+- Nobody can listen during a session, so also run `tools/check.py SCRIPT.md OUT.mp3` on the finished episode. It runs the same check over the whole file and lists any line that's missing or in the wrong voice; `--words` lists where the wording differs, which shows how names came out. On a whole episode it takes about as long as the audio, so run it in the background and alone. Whisper sometimes gets stuck repeating "thank you" over a stretch, which shows up as a missing line; transcribe that stretch on its own before believing it.
 
 ## Environment notes
 
