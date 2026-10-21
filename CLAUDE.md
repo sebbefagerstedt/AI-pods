@@ -43,7 +43,9 @@ Part 3: The birth of LLMs
 
 Possible Season 2, "Understanding the headlines": hallucinations, memory and RAG, reasoning models (o1, DeepSeek-R1), agents and tool use, image and video generators, open vs. closed models and who's who, interpretability, AI safety, chips and data centers, benchmarks.
 
-## Next steps
+## Status and next steps
+
+Nothing has been recorded yet. The first session ran in the "Tributary" environment, which couldn't reach the voice models, so work continues in a new chat that uses the "AI Pods" environment.
 
 1. Make a ~15-second sample clip of the two hosts talking, commit it under `samples/`, and share it in the chat for feedback on voices and tone.
 2. Produce episodes 1–2 as a pilot; adjust depth, tone and voices before making the rest.
