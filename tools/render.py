@@ -20,7 +20,8 @@ Set up the venv with tools/setup.sh, then:
 It renders about 3 minutes of script at a time, about 5 times slower than real
 time on 4 CPUs. VibeVoice now and then puts a line in the wrong voice, garbles
 it or adds a stray sound, so each segment is transcribed and checked, and
-retaken with a new seed if anything is off. Finished segments are cached in
+retaken with a new seed if anything is off; --takes 1 skips the retakes.
+It uses an Nvidia graphics card or Apple silicon when there is one. Finished segments are cached in
 .cache/, so a render that gets interrupted picks up where it stopped.
 """
 
@@ -117,6 +118,15 @@ def cache_path(segment, voices, seed):
     voice_hashes = [hashlib.sha1(Path(voices[speaker]).read_bytes()).hexdigest() for speaker in used]
     key = json.dumps([MODEL, seed, segment, voice_hashes])
     return CACHE / f"{hashlib.sha1(key.encode()).hexdigest()}.wav"
+
+
+def device():
+    """The fastest place to run VibeVoice here, and the number format to run it in."""
+    if torch.cuda.is_available():
+        return "cuda", torch.bfloat16
+    if torch.backends.mps.is_available():  # Apple silicon
+        return "mps", torch.float32
+    return "cpu", torch.bfloat16  # fast on CPUs with AMX, slow but working on others
 
 
 def synthesize(segment, voices, seed, processor, model):
@@ -353,6 +363,8 @@ def main():
     parser.add_argument("--voice", action="append", default=[], metavar="SPEAKER=FILE",
                         help="clone a speaker's voice from this recording instead of voices/<name>.wav")
     parser.add_argument("--seed", type=int, default=42, help="change it to get a different take")
+    parser.add_argument("--takes", type=int, default=TAKES,
+                        help=f"tries per segment when the check finds a problem (default {TAKES}; 1 is fastest)")
     parser.add_argument("--title", help="MP3 title tag (default: output file name)")
     args = parser.parse_args()
 
@@ -367,10 +379,11 @@ def main():
         if not path.exists():
             if model is None:
                 processor = AutoProcessor.from_pretrained(MODEL)
-                model = AutoModelForTextToWaveform.from_pretrained(MODEL, dtype=torch.bfloat16).eval()
+                where, dtype = device()
+                model = AutoModelForTextToWaveform.from_pretrained(MODEL, dtype=dtype).to(where).eval()
                 transcribe = transcriber()
             best = None
-            for take in range(TAKES):
+            for take in range(args.takes):
                 audio = synthesize(segment, voices, args.seed + take, processor, model)
                 problems = review(segment, to_16k(audio), score, transcribe, first_line)[0]
                 print(f"[{n}/{len(groups)}] take {take + 1}: {'; '.join(problems) or 'every line checks out'}",
