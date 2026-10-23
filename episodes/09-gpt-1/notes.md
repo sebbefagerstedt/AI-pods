@@ -1,6 +1,6 @@
 # Episode 9: GPT-1 and pre-training
 
-From Zero to ChatGPT, season 1, episode 9. About 29 minutes, with Frank and Alice. The first episode of part 3, "The birth of LLMs".
+From Zero to ChatGPT, season 1, episode 9. About 31 minutes, with Frank and Alice. The first episode of part 3, "The birth of LLMs".
 
 What G, P and T stand for. How OpenAI's 2018 model learned language by guessing the next word in seven thousand free e-books, then learned each new task from that task's labeled examples. Why Google's Bert, which plays fill-in-the-blank, beat it four months later, and why GPT's approach led to ChatGPT anyway. Meant to be heard before reading the GPT-1 paper; a reading guide follows below.
 
@@ -19,6 +19,7 @@ What G, P and T stand for. How OpenAI's 2018 model learned language by guessing 
 - **BooksCorpus:** about 7,000 free e-books, mostly novels, from the self-publishing site Smashwords, assembled for a 2015 paper that described them as written by "yet unpublished authors" (not always true: one had published 29 novels). Google Brain was already training on it in 2016, and Bert used it too. A 2021 study found about a quarter of it was romance (also 14% fantasy, 5% vampires), many books licensed "for personal enjoyment only", and thousands of duplicates.
 - **Input transformations:** GPT-1's way of fitting every task into one stretch of text: glue the parts together with a separator token (premise $ hypothesis), and for multiple choice, glue the context to each answer in turn and let the model score each.
 - **Zero-shot:** doing a task with no examples and no fine-tuning, only by predicting words. GPT-1's paper tried it on four tasks and found the scores rose steadily during pre-training, though they stayed well below fine-tuned scores. The seed of GPT-2 and GPT-3 (episode 11).
+- **Scaling laws:** the finding that a language model gets less wrong (lower *loss*, episode 2's "how wrong") in a predictable way as you scale up any of three things: compute, data, and model size (parameters). Figure 1 of Kaplan and others (2020) shows each one as a straight line on a chart where each step is ten times more (a log scale on both axes): every tenfold increase cuts the loss by about the same share. Not only compute, then, but three dials, and each line holds only while the other two keep up, so all three have to grow together. In the compute panel, the faint curves behind the line are single models of fixed size during pre-training (not fine-tuning): each drops fast, then flattens as it meets the line, because a model that size has no more room to improve. The line itself is the best you can get by picking the right model size for each amount of compute. That made it possible to forecast how good a bigger model would be before building it. More in episode 11.
 - **Ablation:** taking one part out to see how much it mattered. Without pre-training, GPT-1's average score fell by 14.8 points; with an LSTM instead of the transformer, by 5.6.
 - **BERT:** Bidirectional Encoder Representations from Transformers, Google, October 2018. Uses the transformer's encoder, so every word sees the whole passage in both directions. Spelled "Bert" in the script so it's said as a name.
 - **Masked language model:** Bert's training game: hide 15% of the tokens and predict them from both sides. It's a version of the *cloze test*, a fill-in-the-blank reading test described by Wilson Taylor in 1953. Bert can't simply predict the next word while looking both ways, because each word could then "see itself".
@@ -72,6 +73,7 @@ Radford, Narasimhan, Salimans and Sutskever (2018), [Improving Language Understa
 - June 2018: GPT-1.
 - October 2018: BERT.
 - February 2019: GPT-2 (episode 11).
+- January 2020: scaling laws (Kaplan and others).
 - October 2019: Bert in Google Search.
 - November 2022: ChatGPT (episode 12).
 
@@ -94,6 +96,7 @@ Radford, Narasimhan, Salimans and Sutskever (2018), [Improving Language Understa
 - Wilson Taylor (1953), [Cloze Procedure: A New Tool for Measuring Readability](https://doi.org/10.1177/107769905303000401), *Journalism Quarterly*.
 - Pandu Nayak (2019), [Understanding searches better than ever before](https://blog.google/products/search/search-language-understanding-bert/), Google: Bert in search, and the Brazil traveler example.
 - Alec Radford and others (2019), [Language Models are Unsupervised Multitask Learners](https://cdn.openai.com/better-language-models/language_models_are_unsupervised_multitask_learners.pdf). GPT-2, for episode 11.
+- Jared Kaplan, Sam McCandlish and others (2020), [Scaling Laws for Neural Language Models](https://arxiv.org/abs/2001.08361), OpenAI. Look at Figure 1 on page 2: test loss against compute, dataset size and parameters, each a straight line on log-log axes "when not bottlenecked by the other two". In the paper's fits, ten times the parameters cuts the loss by about 16%, ten times the data by about 20%, ten times the compute (spent well) by about 11%. Two years later DeepMind's Chinchilla paper ([Hoffmann and others, 2022](https://arxiv.org/abs/2203.15556)) revised how to split a compute budget: more data and a smaller model than Kaplan suggested.
 - The detective-novel comparison is one Ilya Sutskever has used to explain why predicting the next word well takes understanding.
 
 Next: episode 10, "What happens when you press Enter".
