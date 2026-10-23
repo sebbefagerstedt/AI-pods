@@ -22,9 +22,9 @@ FRANK: Right? Almost sixty years apart. And that's our question for today. When 
 
 ## Welcome
 
-ALICE: So, welcome to From Zero to ChatGPT. This is episode one. I'm Alice.
+ALICE: So, welcome to From Zero to ChatGPT. I'm Alice.
 
-FRANK: And I'm Frank. The idea of this series is pretty simple. AI is in the news every single day, but a lot of us skipped the foundations. So over twelve episodes, we're going to build them up, one piece at a time, from the very first ideas all the way to how ChatGPT actually works.
+FRANK: And I'm Frank. The idea of this series is pretty simple. AI is in the news every single day, but a lot of us skipped the foundations. So over this season, we're going to build them up, one piece at a time, from the very first ideas all the way to how ChatGPT actually works.
 
 ALICE: And no equations. I was promised no equations.
 
@@ -196,7 +196,7 @@ FRANK: Exactly like that. Second, the systems were brittle. Inside their little 
 
 ALICE: That sounds familiar too.
 
-FRANK: It does, though for very different reasons. We'll get to chatbots making things up in episode ten. And third, the rulebooks became impossible to maintain. The ordering system grew to thousands of rules, and every new product meant writing new ones and checking they didn't break the old ones.
+FRANK: It does, though for very different reasons. We'll get to chatbots making things up later in the series. And third, the rulebooks became impossible to maintain. The ordering system grew to thousands of rules, and every new product meant writing new ones and checking they didn't break the old ones.
 
 ALICE: So, a giant pile of rules that nobody fully understands anymore.
 
@@ -248,7 +248,7 @@ ALICE: Because researchers kept building their own knowledge into their systems,
 
 FRANK: So that's really the jump from Eliza to ChatGPT. Eliza was a rulebook. ChatGPT learned from an enormous amount of text.
 
-ALICE: Exactly. Nobody wrote ChatGPT's rules. It learned them. And once the data and the computers finally got big enough, in the early twenty-tens, things took off. That's episode five.
+ALICE: Exactly. Nobody wrote ChatGPT's rules. It learned them. And once the data and the computers finally got big enough, in the early twenty-tens, things took off. That story comes a bit later.
 
 ## Recap
 
@@ -266,6 +266,6 @@ ALICE: And five: learning from examples won, because so much of what we know, li
 
 FRANK: Which leaves a big question for next time. What does it actually mean for a machine to learn?
 
-ALICE: That's episode two: machine learning. What a model actually is, how training works, and why memorizing isn't the same as understanding.
+ALICE: That's next time: machine learning. What a model actually is, how training works, and why memorizing isn't the same as understanding.
 
 FRANK: See you then.

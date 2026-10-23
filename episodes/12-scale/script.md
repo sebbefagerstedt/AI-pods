@@ -1,4 +1,4 @@
-# Episode 11: Scale changes everything
+# Episode 12: Scale changes everything
 
 ## Cold open
 
@@ -14,7 +14,7 @@ FRANK: Right, it's not perfect. And to be fair, it took them ten tries to get th
 
 ALICE: Wait, so the headline was basically "AI lab builds a model too dangerous to share"?
 
-FRANK: Pretty much. The model was called GPT-2. And the thing is, it wasn't a new invention. It was GPT-1, the model from episode nine, made bigger. And then fed a lot more text.
+FRANK: Pretty much. The model was called GPT-2. And the thing is, it wasn't a new invention. It was GPT-1, the model we've already met, made bigger. And then fed a lot more text.
 
 ALICE: Just bigger.
 
@@ -22,7 +22,7 @@ FRANK: Just bigger. And that's today's episode. What happens when you just keep 
 
 ## Welcome
 
-ALICE: Welcome to From Zero to ChatGPT. This is episode eleven. I'm Alice.
+ALICE: Welcome to From Zero to ChatGPT. I'm Alice.
 
 FRANK: And I'm Frank.
 
@@ -30,11 +30,11 @@ ALICE: And I'll admit, this is the one I've been waiting for. Because if you fol
 
 FRANK: And if someone's jumping in here?
 
-ALICE: Then three quick reminders. One, from episode two. A model is a machine with millions of adjustable knobs. Training means turning the knobs, a tiny bit at a time, until the answers are less wrong. And "how wrong" has a name: the loss.
+ALICE: Then three quick reminders. One, from early in the series. A model is a machine with millions of adjustable knobs. Training means turning the knobs, a tiny bit at a time, until the answers are less wrong. And "how wrong" has a name: the loss.
 
 FRANK: Knobs and loss.
 
-ALICE: Two, from episode nine. A language model learns by guessing the next word. You show it a stretch of text, it bets on what comes next, and the real next word is the answer key. No labels needed. That stage is called pre-training. And GPT-1, back in 2018, did it on about seven thousand books, with about a hundred million knobs.
+ALICE: Two, from the GPT-1 episode. A language model learns by guessing the next word. You show it a stretch of text, it bets on what comes next, and the real next word is the answer key. No labels needed. That stage is called pre-training. And GPT-1, back in 2018, did it on about seven thousand books, with about a hundred million knobs.
 
 FRANK: And then fine-tuning.
 
@@ -46,7 +46,7 @@ ALICE: Good. Frank, you started with the unicorns, so you take us through GPT-2.
 
 ## Ten times bigger
 
-FRANK: Happy to. So, GPT-1 came out in June 2018. And the people at OpenAI had seen something in it that stuck with them. Remember the zero-shot experiments, from the end of episode nine?
+FRANK: Happy to. So, GPT-1 came out in June 2018. And the people at OpenAI had seen something in it that stuck with them. Remember the zero-shot experiments, from the end of the GPT-1 episode?
 
 ALICE: Where they tested it on tasks without any fine-tuning. Like adding "very" after a movie review, and seeing if it guessed "positive" or "negative".
 
@@ -214,7 +214,7 @@ FRANK: Sort of. This time OpenAI didn't release the model at all. Instead, they 
 
 ALICE: And that sounds a lot like ChatGPT. Was GPT-3 basically ChatGPT?
 
-FRANK: Not yet. And this matters. GPT-3 was still a pure next-word guesser. Ask it a question, and it might answer. Or it might write five more questions, because on the web, questions often come in lists. It didn't know it was supposed to be helpful. Turning it into an assistant is episode twelve.
+FRANK: Not yet. And this matters. GPT-3 was still a pure next-word guesser. Ask it a question, and it might answer. Or it might write five more questions, because on the web, questions often come in lists. It didn't know it was supposed to be helpful. Turning it into an assistant is next time.
 
 ALICE: Got it. So, we've got the chart, and we've got GPT-3 proving the chart right. Where does the story go from here?
 
@@ -270,13 +270,13 @@ ALICE: Exactly. Ilya Sutskever, who was on the GPT-1 paper and helped lead OpenA
 
 FRANK: Huh. So the dial that's hardest to turn is the reading.
 
-ALICE: And the other catch is that the line measures loss, how good the model is at guessing the next word. That's not quite the same as how useful it is. Turning a good guesser into something helpful takes more work, which is episode twelve. And the newest trick, letting a model think for longer before it answers, is another dial entirely. That's for another season.
+ALICE: And the other catch is that the line measures loss, how good the model is at guessing the next word. That's not quite the same as how useful it is. Turning a good guesser into something helpful takes more work, which is next time. And the newest trick, letting a model think for longer before it answers, is another dial entirely. That's for another season.
 
 FRANK: So, is it fair to say scale was the whole story?
 
 ALICE: It's fair to say it was the surprise of the story. There's a famous short essay from 2019, by Rich Sutton, one of the pioneers of AI, called "The Bitter Lesson". His point: over seventy years of AI, the methods that won in the end were the simple ones that could use more and more computing power. Not the clever, hand-built ones.
 
-FRANK: That sounds a lot like episode one. Learning from data beating hand-written rules.
+FRANK: That sounds a lot like where this series started. Learning from data beating hand-written rules.
 
 ALICE: It's the same lesson, a few decades on. And it's bitter because researchers keep putting their cleverness into the system, and then watch a simpler method, made bigger, beat them.
 
@@ -296,6 +296,6 @@ ALICE: And five: the race. Because the line made the payoff predictable, compani
 
 FRANK: Which leaves one question. GPT-3 was a brilliant guesser of the next word. Ask it a question, and it might just write more questions. So how do you get from that to ChatGPT, something that actually tries to help you?
 
-ALICE: That's episode twelve. Base models, chat models, and how people taught a model to be an assistant.
+ALICE: That's next time. Base models, chat models, and how people taught a model to be an assistant.
 
 FRANK: See you then.

@@ -1,6 +1,6 @@
-# Episode 11: Scale changes everything
+# Episode 12: Scale changes everything
 
-From Zero to ChatGPT, season 1, episode 11. About 23 minutes, with Frank and Alice. Part 3, "The birth of LLMs".
+From Zero to ChatGPT, season 1, episode 12. About 23 minutes, with Frank and Alice. Part 3, "The birth of LLMs".
 
 What happened when OpenAI took GPT-1 and just made it bigger. GPT-2 and the unicorn story it was "too dangerous" to release; the scaling laws chart, which showed that compute, data and model size each make a model predictably better; GPT-3 and learning a task from a few examples in the prompt; DeepMind's Chinchilla correction; and the race for chips, data centers and power that followed.
 
@@ -60,7 +60,7 @@ Later sections worth a look: the architecture details (depth vs. width) barely m
 - May 2020: GPT-3, and Microsoft's supercomputer for OpenAI.
 - June 2020: the OpenAI API.
 - March 2022: Chinchilla.
-- November 2022: ChatGPT (episode 12).
+- November 2022: ChatGPT (episode 13).
 - March 2023: GPT-4, its final loss predicted from much smaller runs.
 - December 2024: Ilya Sutskever's "we have but one internet" talk.
 - January 2025: Stargate.
@@ -79,4 +79,4 @@ Later sections worth a look: the architecture details (depth vs. width) barely m
 - Ilya Sutskever (2024), "Sequence to sequence learning with neural networks: what a decade", NeurIPS 2024 talk (on YouTube): "we have but one internet", data as "the fossil fuel of AI".
 - OpenAI (2025), [Announcing The Stargate Project](https://openai.com/index/announcing-the-stargate-project/).
 
-Next: episode 12, "From autocomplete to assistant".
+Next: episode 13, "From autocomplete to assistant".

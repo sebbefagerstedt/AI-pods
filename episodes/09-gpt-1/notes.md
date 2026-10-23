@@ -10,7 +10,7 @@ What G, P and T stand for. How OpenAI's 2018 model learned language by guessing 
 - **Language model (the LM in LLM):** a model that predicts the next word. Strictly, the next *token*, a word or a piece of one (episode 6). It doesn't pick one word; it spreads probability over all of them, and training makes it less surprised by the word that actually comes next.
 - **Self-supervised learning:** learning from raw text that nobody labeled, because the text is its own answer key: the "label" for each word is simply the word that follows. The GPT-1 paper calls this *unsupervised*.
 - **Pre-training:** the first, expensive stage: learning general language by predicting the next word in a huge pile of text, before you've picked any task. The P in GPT. When the news mentions a lab's "pre-training run", this is what it means.
-- **Fine-tuning:** the second, cheap stage: start from the pre-trained model, add a small output layer, and train a little more on the task's labeled examples (from about 2,500 to 550,000 in the paper). For most tasks GPT-1 went through them three times, against 100 passes over the books in pre-training. Today's chat models are still made this way, pre-training then further training (episode 12).
+- **Fine-tuning:** the second, cheap stage: start from the pre-trained model, add a small output layer, and train a little more on the task's labeled examples (from about 2,500 to 550,000 in the paper). For most tasks GPT-1 went through them three times, against 100 passes over the books in pre-training. Today's chat models are still made this way, pre-training then further training (episode 13).
 - **Transfer learning:** reusing what a model learned on one job for another. In images, networks pre-trained on ImageNet (episode 5) had been reused for years. In language, before 2018, mostly only word embeddings (episode 6) were reused: the first layer, like getting a dictionary but no reading experience.
 - **GPT:** generative pre-trained transformer. Generative: trained by predicting the next word. Pre-trained: on raw text first. Transformer: the architecture from episode 8.
 - **Decoder-only transformer:** the original transformer (episode 8) had an encoder that reads the input (the left tower in its famous diagram) and a decoder that writes the output (the right tower). GPT keeps only the decoder, with its masked self-attention: each word can look back but never ahead, which is what next-word prediction needs.
@@ -18,7 +18,7 @@ What G, P and T stand for. How OpenAI's 2018 model learned language by guessing 
 - **Context window:** how much text the model can take in at once. GPT-1: 512 tokens, about a page.
 - **BooksCorpus:** about 7,000 free e-books, mostly novels, from the self-publishing site Smashwords, assembled for a 2015 paper that described them as written by "yet unpublished authors" (not always true: one had published 29 novels). Google Brain was already training on it in 2016, and Bert used it too. A 2021 study found about a quarter of it was romance (also 14% fantasy, 5% vampires), many books licensed "for personal enjoyment only", and thousands of duplicates.
 - **Input transformations:** GPT-1's way of fitting every task into one stretch of text: glue the parts together with a separator token (premise $ hypothesis), and for multiple choice, glue the context to each answer in turn and let the model score each.
-- **Zero-shot:** doing a task with no examples and no fine-tuning, only by predicting words. GPT-1's paper tried it on four tasks and found the scores rose steadily during pre-training, though they stayed well below fine-tuned scores. The seed of GPT-2 and GPT-3 (episode 11).
+- **Zero-shot:** doing a task with no examples and no fine-tuning, only by predicting words. GPT-1's paper tried it on four tasks and found the scores rose steadily during pre-training, though they stayed well below fine-tuned scores. The seed of GPT-2 and GPT-3 (episode 12).
 - **Ablation:** taking one part out to see how much it mattered. Without pre-training, GPT-1's average score fell by 14.8 points; with an LSTM instead of the transformer, by 5.6.
 - **BERT:** Bidirectional Encoder Representations from Transformers, Google, October 2018. Uses the transformer's encoder, so every word sees the whole passage in both directions. Spelled "Bert" in the script so it's said as a name.
 - **Masked language model:** Bert's training game: hide 15% of the tokens and predict them from both sides. It's a version of the *cloze test*, a fill-in-the-blank reading test described by Wilson Taylor in 1953. Bert can't simply predict the next word while looking both ways, because each word could then "see itself".
@@ -71,9 +71,9 @@ Radford, Narasimhan, Salimans and Sutskever (2018), [Improving Language Understa
 - January 2018: ULMFiT. February 2018: ELMo.
 - June 2018: GPT-1.
 - October 2018: BERT.
-- February 2019: GPT-2 (episode 11).
+- February 2019: GPT-2 (episode 12).
 - October 2019: Bert in Google Search.
-- November 2022: ChatGPT (episode 12).
+- November 2022: ChatGPT (episode 13).
 
 ## Papers and sources
 
@@ -93,7 +93,7 @@ Radford, Narasimhan, Salimans and Sutskever (2018), [Improving Language Understa
 - Guokun Lai and others (2017), [RACE: Large-scale ReAding Comprehension Dataset From Examinations](https://arxiv.org/abs/1704.04683). English exams for Chinese students aged 12 to 18. Crowdworkers averaged 73%; the authors judged 94.5% of the questions answerable.
 - Wilson Taylor (1953), [Cloze Procedure: A New Tool for Measuring Readability](https://doi.org/10.1177/107769905303000401), *Journalism Quarterly*.
 - Pandu Nayak (2019), [Understanding searches better than ever before](https://blog.google/products/search/search-language-understanding-bert/), Google: Bert in search, and the Brazil traveler example.
-- Alec Radford and others (2019), [Language Models are Unsupervised Multitask Learners](https://cdn.openai.com/better-language-models/language_models_are_unsupervised_multitask_learners.pdf). GPT-2, for episode 11.
+- Alec Radford and others (2019), [Language Models are Unsupervised Multitask Learners](https://cdn.openai.com/better-language-models/language_models_are_unsupervised_multitask_learners.pdf). GPT-2, for episode 12.
 - The detective-novel comparison is one Ilya Sutskever has used to explain why predicting the next word well takes understanding.
 
-Next: episode 10, "What happens when you press Enter".
+Next: episode 10, "Inside the transformer, layer by layer".
