@@ -384,31 +384,7 @@ FRANK: Just a little room.
 
 ALICE: Just a little. Eight months later came GPT-2, more than ten times bigger, trained on far more text. And it could do quite a few things nobody had fine-tuned it for. That's episode eleven. So Bert won the battle of 2018. But the idea that won the decade was GPT's: one model that writes, made bigger and bigger.
 
-FRANK: Bigger and bigger. Okay, but bigger how, exactly? I always kind of assumed it was just about computing power.
-
-ALICE: So did I, honestly, until I saw one chart. It's from a paper OpenAI put out in early 2020, called "Scaling Laws for Neural Language Models". They trained a whole range of language models, tiny ones up to big ones, and measured how wrong each one was at guessing the next word. And the very first figure in the paper has three panels side by side.
-
-FRANK: Three panels of what?
-
-ALICE: Three things you can make bigger. The first is computing power. The second is data, how much text the model reads. And the third is the size of the model itself, the number of knobs. And all three panels look the same: a straight line, going down.
-
-FRANK: Wait, a straight line? That's surprising. Usually you'd expect it to level off at some point.
-
-ALICE: That's the trick in how it's drawn. Each step along the bottom isn't one more, it's ten times more. So what the line says is: every time you make one of these ten times bigger, the model gets less wrong by about the same share. Over the whole range they tested, it didn't flatten out.
-
-FRANK: Huh. So it's not just compute. It's three dials.
-
-ALICE: Three dials. And here's the catch. Each line only holds if the other two dials aren't holding it back. You can actually see that in the computing power panel. Behind the line there are lots of faint curves, one for each model. Each one drops fast at first, then bends and flattens out as it reaches the line.
-
-FRANK: Wait, why does it flatten?
-
-ALICE: Because each faint curve is one model, of one fixed size, being trained longer and longer. Early on, every bit of extra training helps a lot. But then that model runs out of room. It's too small to soak up any more. To keep going down the line, you need a bigger model, and more text to feed it. So you have to turn up all three together.
-
-FRANK: Okay, and why did that chart matter so much?
-
-ALICE: Because it turned a hunch into a forecast. If you know where the line goes, you can predict how good a model will be before you spend the money to build it. That's a big part of why the labs started pouring billions into data centers. We'll come back to it in episode eleven.
-
-FRANK: Okay. Back to Bert for a second. Did it just disappear?
+FRANK: And Bert? Did it just disappear?
 
 ALICE: Not at all. Models descended from Bert still quietly do a lot of the work in search and in sorting text. But the road to ChatGPT ran through GPT. Frank, you promised us a guide to the paper.
 
