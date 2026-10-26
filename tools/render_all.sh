@@ -6,6 +6,7 @@
 # finds are kept in .cache/render_all.log; list them with
 #   grep -E "^== |take 1: [^e]" .cache/render_all.log
 #
+# tools/render_all.sh 08 renders only episodes whose folder starts with 08.
 # TAKES=3 tools/render_all.sh retakes segments with problems (slower); the default, 1, doesn't.
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -13,7 +14,9 @@ TAKES="${TAKES:-1}"
 LOG=.cache/render_all.log
 mkdir -p .cache
 
-for dir in episodes/*/; do
+ONLY="${1:-}"
+
+for dir in episodes/"$ONLY"*/; do
   name=$(basename "$dir")
   mp3="$dir$name.mp3"
   [[ -f "${dir}script.md" && ! -f "$mp3" ]] || continue
@@ -30,4 +33,8 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
 Claude-Session: https://claude.ai/code/session_01HxZ5z8Xp3ZYTQinoJMYX4d"
   for wait in 2 4 8 16; do git push -q origin HEAD && break || sleep "$wait"; done
 done
-echo "== all episodes rendered" | tee -a "$LOG"
+if [[ -z "$ONLY" ]]; then
+  echo "== all episodes rendered" | tee -a "$LOG"
+else
+  echo "== done: $ONLY" | tee -a "$LOG"
+fi
