@@ -114,7 +114,7 @@ ALICE: Fades fast. Think about a game of telephone. The first person whispers a 
 
 FRANK: Okay, but couldn't training fix that? If it keeps getting "keys are" wrong, the loss goes up, and it learns to hold on to the subject.
 
-ALICE: That's the second, sneakier half of the problem. And it's something we've seen before. Remember passing the blame backward, from a couple of episodes ago? The salty dish, with the blame flowing back through the kitchen?
+ALICE: That's the second, sneakier half of the problem. And it's something we've seen before. Remember passing the blame backward, from part one? The salty dish, with the blame flowing back through the kitchen?
 
 FRANK: And it faded, if there were too many stations.
 

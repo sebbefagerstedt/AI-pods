@@ -1,6 +1,6 @@
 # Episode 8: "Attention Is All You Need", explained
 
-From Zero to ChatGPT, season 1, episode 8. About 21 minutes, with Frank and Alice. The last episode of part 2, "Teaching computers language". A companion to the 2017 paper.
+From Zero to ChatGPT, season 1, episode 8. About 20 minutes, with Frank and Alice. The last episode of part 2, "Teaching computers language". A companion to the 2017 paper.
 
 The transformer, in plain words. Self-attention, where every word looks at every other word; queries, keys and values as a networking event with questions, name badges and answers; multi-head attention as readers with different highlighters; position stamps made from waves, like the hands of a clock; why processing every word at once fit graphics cards and made training cheap; and a first look at the famous two-tower diagram.
 

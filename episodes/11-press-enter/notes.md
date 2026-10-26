@@ -1,6 +1,6 @@
 # Episode 11: What happens when you press Enter
 
-From Zero to ChatGPT, season 1, episode 11. About 22 minutes, with Frank and Alice. Part 3, "The birth of LLMs".
+From Zero to ChatGPT, season 1, episode 11. About 21 minutes, with Frank and Alice. Part 3, "The birth of LLMs".
 
 From the output layer's spread of bets to an actual answer. Why the model writes one token at a time and rereads everything after each one; how it picks a token, and what temperature does; context windows, and why the app sends your whole chat every turn; contextual inertia, the pull of the model's own earlier answers, and why a fresh chat often helps; whether next-word prediction is thinking; and why models make things up, starting with the lawyer whose brief cited six court cases that didn't exist.
 

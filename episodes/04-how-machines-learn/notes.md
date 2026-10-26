@@ -1,6 +1,6 @@
 # Episode 4: How machines actually learn
 
-From Zero to ChatGPT, season 1, episode 4. About 18 minutes, with Frank and Alice. Part 1, "How machines learn".
+From Zero to ChatGPT, season 1, episode 4. About 17 minutes, with Frank and Alice. Part 1, "How machines learn".
 
 How a network with billions of knobs finds good settings. Gradient descent, pictured as walking downhill in fog; why the step size matters and why each step uses only a small random batch; and backpropagation, which works out every knob's share of the blame in one backward pass, like a kitchen tracing a salty dish back through its stations. Plus why it still took decades: fading blame in deep networks, and too little data and computing power.
 

@@ -42,7 +42,7 @@ FRANK: I am. So, you type a question into ChatGPT. Say: "What's the capital of A
 
 ALICE: Hidden instructions?
 
-FRANK: Things like "You are a helpful assistant", and today's date. We'll get into that next time, when we see how a chatbot is made. For now: it's all one big text. That text gets cut into tokens. And then the whole thing goes into the model, all at once, up through all the layers.
+FRANK: Things like "You are a helpful assistant", and today's date. We'll get into that later in the series, when we see how a chatbot is made. For now: it's all one big text. That text gets cut into tokens. And then the whole thing goes into the model, all at once, up through all the layers.
 
 ALICE: Up the tower.
 
