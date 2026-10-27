@@ -27,7 +27,8 @@ Ashish Vaswani, Noam Shazeer, Niki Parmar, Jakob Uszkoreit, Llion Jones, Aidan G
 - **3.2.1, Scaled dot-product attention, with Figure 2 (left):** equation 1, the one equation everyone remembers.
 - **3.2.2, Multi-head attention, with Figure 2 (right):** h = 8 heads.
 - **3.2.3, Applications of attention in our model:** the three uses: encoder self-attention, masked decoder self-attention, and encoder-decoder attention.
-- **3.3 and 3.4:** the feed-forward networks (2,048 units wide) and the shared embedding and output weights. Episode 10 covers both.
+- **3.3 and 3.4:** the feed-forward networks (2,048 units wide: each token on its own, after attention) and the shared embedding and output weights. This episode introduces the feed-forward half; episode 10 goes deeper on both.
+- **5.1, Training data:** sentences cut into tokens with byte-pair encoding, one shared English-German vocabulary of about 37,000 tokens (32,000 word pieces for English-French).
 - **3.5, Positional encoding:** the waves, and why they chose them.
 - **4, Why self-attention, with Table 1:** compares layer types by work per layer, how much can run in parallel, and the longest path between two positions: one step for self-attention, as many steps as there are words for an RNN.
 - **5 and 6, Training and results:** WMT 2014 English-German (about 4.5 million sentence pairs) and English-French (36 million). Base model about 65 million parameters, 12 hours on 8 P100 GPUs; big model about 213 million, 3.5 days. BLEU 28.4 (English-German) and 41.8 (English-French), records at "a small fraction of the training costs". Table 3 tests variations; Table 4 shows it also works for parsing English sentences.

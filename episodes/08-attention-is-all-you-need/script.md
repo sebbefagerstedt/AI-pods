@@ -216,7 +216,35 @@ FRANK: Right. And in training, where the whole correct translation is sitting th
 
 ALICE: So the arrows going from the left tower to the right tower...
 
-FRANK: ...are the decoder looking across. And there are a few more boxes in each layer, things labeled "feed forward" and "add and norm". They matter, and we'll give them their own time later in the series, with a layer-by-layer look inside. For now: the left tower reads, the right tower writes, and the writer can't peek.
+FRANK: ...are the decoder looking across. And there's one more big box in every layer, in both towers. It's labeled "feed forward".
+
+ALICE: Which we haven't talked about at all. Is it important?
+
+FRANK: Very. Every layer has two halves. First attention, where the words compare notes. And then the feed-forward part, where each word works on its own. No looking at the others. It takes what it just gathered from the other words, and thinks it over, in a small network of its own.
+
+ALICE: Hmm. So attention is the meeting, and feed-forward is everyone going back to their desk.
+
+FRANK: That's a nice way to put it. Gather, then think. And then the next layer does it again. Six times in each tower.
+
+ALICE: And is it small? It sounds like a side thing.
+
+FRANK: It's actually the bigger half. Each word is a list of five hundred and twelve numbers in the paper, but inside the feed-forward part it gets spread out to over two thousand, worked on, and squeezed back down. A big share of the model's knobs are in there. And later research found it's where a lot of what a model knows seems to be stored. We'll open it up later in the series.
+
+ALICE: Okay. And the boxes that say "add and norm"?
+
+FRANK: Housekeeping, but clever housekeeping. "Add" means each half doesn't replace what the word had, it adds to it. So nothing gets lost on the way up. And "norm" keeps the numbers in a sensible range, so they don't drift as they pass through layer after layer.
+
+ALICE: And at the very bottom of the towers? Where the sentence goes in?
+
+FRANK: There's a box that says "input embedding". And this is where I have to confess something. We've been saying "word" this whole time. But the model doesn't really read words. It reads tokens.
+
+ALICE: The word pieces. Common words stay whole, rare ones get split into pieces.
+
+FRANK: Exactly. So before anything else happens, the sentence is cut into tokens, and each token gets its embedding, its list of numbers. And then the position stamp is added on top. For the German translation, the paper used one shared list of about thirty seven thousand tokens, for both English and German together.
+
+ALICE: Both languages in one list?
+
+FRANK: In one list. Lots of pieces are shared anyway, names, numbers, bits of words. So everywhere we said "every word looks at every word", it's really every token looking at every token. Same idea, just finer pieces. So: the left tower reads, the right tower writes, and the writer can't peek.
 
 ALICE: And at the top of the right tower?
 
