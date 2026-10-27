@@ -1,0 +1,6 @@
+02-machine-learning 5
+07-one-word-at-a-time 5 2
+03-neural-networks 6 4
+08-attention-is-all-you-need 6 7
+11-press-enter 8 7
+13-autocomplete-to-assistant 7

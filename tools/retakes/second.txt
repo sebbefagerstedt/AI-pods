@@ -1,0 +1,9 @@
+08-attention-is-all-you-need 6 1 2 3
+02-machine-learning 1 2 3
+03-neural-networks 1 2 3
+04-how-machines-learn 1 2 3 4
+05-2012-big-bang 1 2 3 4 5
+06-words-as-numbers 1 2 3 4
+10-inside-the-transformer 1 2 3 4 5 6 7
+11-press-enter 1 2 3 4 5 6
+13-autocomplete-to-assistant 1 2 3 4 5
