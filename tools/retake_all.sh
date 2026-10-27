@@ -14,8 +14,8 @@ while read -r name segs; do
   title=$(head -1 "$dir/script.md" | sed 's/^# *//')
   echo "== $name: segments $segs" | tee -a "$LOG"
   # shellcheck disable=SC2086
-  .venv/bin/python tools/retake.py "$dir/script.md" $segs 2>&1 | grep -v "HF Hub" | tee -a "$LOG"
-  .venv/bin/python tools/render.py "$dir/script.md" "$dir/$name.partial.mp3" --title "$title" 2>&1 \
+  .venv/bin/python tools/retake.py "$dir/script.md" $segs </dev/null 2>&1 | grep -v "HF Hub" | tee -a "$LOG"
+  .venv/bin/python tools/render.py "$dir/script.md" "$dir/$name.partial.mp3" --title "$title" </dev/null 2>&1 \
     | grep -v "HF Hub" | tee -a "$LOG"
   mv "$dir/$name.partial.mp3" "$dir/$name.mp3"
   git add "$dir/$name.mp3"
