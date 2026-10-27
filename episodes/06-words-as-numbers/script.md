@@ -174,7 +174,19 @@ ALICE: Those pieces are tokens. A token is a word, or a piece of a word. Sometim
 
 FRANK: How do you decide where to cut?
 
-ALICE: That's learned too, from text. One popular method starts with single letters, and then keeps gluing together the pair that shows up most often. "T" and "h" become "th". Then "th" and "e" become "the". And so on, tens of thousands of times. The most common chunks become tokens. It's borrowed from an old trick for compressing files, from 1994. And in 2016 it was adapted for language models.
+ALICE: That's learned too, from text. One popular method starts with single letters, and then keeps gluing together the pair that shows up most often. "T" and "h" become "th". Then "th" and "e" become "the". And so on, tens of thousands of times. The most common chunks become tokens. It's borrowed from an old trick for compressing files, from 1994. And in 2016 it was adapted for language models. It's called byte pair encoding. Pairs, glued together, over and over.
+
+FRANK: And the thing that does the cutting, does that have a name?
+
+ALICE: It's called the tokenizer. And it's worth knowing, because people talk about it a lot. The tokenizer is its own little tool, separate from the model. It's built first, from a pile of text, and then it's frozen. It never changes while the model trains.
+
+FRANK: So it sits in front of the model.
+
+ALICE: Right at the front door. Your text goes in, and out comes a list of token numbers. "The" might be token number 464, say. The model only ever sees those numbers. And when the model answers, it answers in token numbers too, and the tokenizer turns them back into text.
+
+FRANK: Huh. So every model has its own tokenizer?
+
+ALICE: Usually, yes. Different companies cut text differently, which is why the same sentence can be a different number of tokens in different chatbots.
 
 FRANK: And how big is the token list?
 
