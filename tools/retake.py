@@ -4,7 +4,7 @@
 
 Segment numbers are the [n/N] ones in the render log. Each segment gets up to --takes new
 takes with new seeds; the take with the fewest problems, the cached one included, replaces
-the cached audio. Rerun render.py on the script afterwards to rebuild the MP3 from the cache.
+the cached audio; --takes 0 only checks. Rerun render.py on the script afterwards to rebuild the MP3 from the cache.
 """
 import argparse
 
@@ -28,9 +28,7 @@ def main():
     groups = segments(turns)
     score = voice_matcher(voices)
     transcribe = transcriber()
-    processor = AutoProcessor.from_pretrained(MODEL)
-    where, dtype = device()
-    model = AutoModelForTextToWaveform.from_pretrained(MODEL, dtype=dtype).to(where).eval()
+    processor = model = None
     for n in args.segment:
         segment = groups[n - 1]
         first_line = 1 + sum(len(g) for g in groups[: n - 1])
@@ -42,6 +40,10 @@ def main():
         for take in range(args.takes):
             if not best[1]:
                 break
+            if model is None:
+                processor = AutoProcessor.from_pretrained(MODEL)
+                where, dtype = device()
+                model = AutoModelForTextToWaveform.from_pretrained(MODEL, dtype=dtype).to(where).eval()
             audio = synthesize(segment, voices, args.seed + 3 + take, processor, model)
             problems = review(segment, to_16k(audio), score, transcribe, first_line)[0]
             print(f"[{n}] retake {take + 1}: {'; '.join(problems) or 'every line checks out'}", flush=True)

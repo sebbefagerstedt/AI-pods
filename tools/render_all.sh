@@ -26,7 +26,7 @@ for dir in "${dirs[@]}"; do
   echo "== $name" | tee -a "$LOG"
   # Write to a temporary name, so an interrupted export never looks like a finished episode.
   .venv/bin/python tools/render.py "${dir}script.md" "$dir$name.partial.mp3" \
-    --takes "$TAKES" --title "$title" 2>&1 | grep -v "HF Hub" | tee -a "$LOG"
+    --takes "$TAKES" --title "$title" 2>&1 | grep --line-buffered -v "HF Hub" | tee -a "$LOG"
   mv "$dir$name.partial.mp3" "$mp3"
   git add "$mp3"
   git commit -q -m "Render $title
