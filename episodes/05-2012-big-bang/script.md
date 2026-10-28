@@ -30,7 +30,7 @@ ALICE: Welcome to From Zero to ChatGPT. I'm Alice.
 
 FRANK: And I'm Frank.
 
-ALICE: And this is the last episode of part one, how machines learn. So far, we've got all the pieces. A model is a machine with knobs. A neural network wires those knobs into layers of artificial neurons. And training means walking downhill in fog: measure how wrong you were, pass the blame backward, nudge every knob.
+ALICE: And this one wraps up the first part of the series, how machines learn. After this, we move on to language. So far, we've got all the pieces. A model is a machine with knobs. A neural network wires those knobs into layers of artificial neurons. And training means walking downhill in fog: measure how wrong you were, pass the blame backward, nudge every knob.
 
 FRANK: All of which existed by 1986.
 
@@ -230,7 +230,7 @@ ALICE: Four: after that, everything moved. A forty-four-million-dollar auction f
 
 FRANK: And five: Nvidia went from gaming to the center of AI, with the chips and the software everyone built on. And it's the bitter lesson again: simple methods, with lots of data and computing power, beat clever hand-made ones.
 
-ALICE: Which ends part one. We know how machines learn. Now, part two: language. And the first problem is a basic one. A photo is already numbers. A word isn't. So how do you turn words into numbers a network can work with?
+ALICE: Which wraps up the first part of the series. We know how machines learn. Next up: language. And the first problem is a basic one. A photo is already numbers. A word isn't. So how do you turn words into numbers a network can work with?
 
 FRANK: That's next time. Words as numbers. Tokens, embeddings, and how king minus man plus woman ends up at queen.
 
