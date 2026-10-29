@@ -1,6 +1,6 @@
 # Bonus: Jev, the model that doesn't write
 
-From Zero to ChatGPT, a bonus episode before season 2. About 13 minutes, with Frank and Alice.
+From Zero to ChatGPT, a bonus episode before season 2. About 14 minutes, with Frank and Alice.
 
 What Jev is (TypeSafe AI's "System One" model, released September 2026), the three kinds of answer it gives, why it answers in well under a second when a thinking chat model takes many seconds, what's actually different inside, and what an independent test found.
 
