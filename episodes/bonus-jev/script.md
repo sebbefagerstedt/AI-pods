@@ -110,7 +110,7 @@ ALICE: The same tower as a chat model.
 
 FRANK: Same tower. Change one is the one our listener guessed. The output layer. Normally, at the top, the model holds the notepad up against every token it knows, about a quarter of a million here, and scores them all. The Decider swaps that for a much smaller layer. Two hundred and fifty-five slots.
 
-ALICE: Why two hundred and fifty-five?
+ALICE: Slots for what?
 
 FRANK: In the prompt, each of your options gets a short label. A, B, C, and so on. One slot per label, and only the labels you actually used count. Jev has the same limit, by the way. Two hundred and fifty-five options.
 
