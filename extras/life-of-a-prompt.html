@@ -1,0 +1,635 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>body{margin:0}[hidden]{display:none!important}</style>
+</head>
+<body>
+<title>Life of a Prompt</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans+Condensed:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Sans:ital,wght@0,400;0,600;1,400&display=swap">
+<style>
+/* Layout: a cutaway of the round trip (sticky on wide screens) beside a numbered walk-through of one real question. */
+:root {
+  --bg:#f4f5f9; --surface:#ffffff; --surface-2:#fafbfd; --fg:#191c2a; --muted:#596079;
+  --hair:#d9dce6; --box-line:#b8bdcf; --code:#eceef5; --flash:#e3e2fd;
+  --route:#4f46e5; --route-ink:#3a32b8; --chip:#ffffff;
+  --band-dev:#e8eaf2; --dev-ink:#4a5068;
+  --band-har:#f7ecd8; --har-ink:#8c5208;
+  --band-srv:#e0f0ea; --srv-ink:#0b6656;
+  --net:#c6e6db; --net-line:#77b9a7;
+  --font-display:"Bricolage Grotesque", "IBM Plex Sans", system-ui, sans-serif;
+  --font-body:"IBM Plex Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-label:"IBM Plex Sans Condensed", "Arial Narrow", "Roboto Condensed", system-ui, sans-serif;
+  --font-mono:"IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg:#10121a; --surface:#1b1e2b; --surface-2:#181b26; --fg:#e7e9f2; --muted:#9ca2b8;
+    --hair:#2c3145; --box-line:#464d68; --code:#1f2232; --flash:#26264d;
+    --route:#8d8bff; --route-ink:#c9c8ff; --chip:#1b1e2b;
+    --band-dev:#1a1d29; --dev-ink:#a9aec4;
+    --band-har:#2a2115; --har-ink:#e8b46d;
+    --band-srv:#12261f; --srv-ink:#79d6c2;
+    --net:#19372f; --net-line:#3e8a77;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg:#10121a; --surface:#1b1e2b; --surface-2:#181b26; --fg:#e7e9f2; --muted:#9ca2b8;
+  --hair:#2c3145; --box-line:#464d68; --code:#1f2232; --flash:#26264d;
+  --route:#8d8bff; --route-ink:#c9c8ff; --chip:#1b1e2b;
+  --band-dev:#1a1d29; --dev-ink:#a9aec4;
+  --band-har:#2a2115; --har-ink:#e8b46d;
+  --band-srv:#12261f; --srv-ink:#79d6c2;
+  --net:#19372f; --net-line:#3e8a77;
+  color-scheme: dark;
+}
+
+body {
+  background: var(--bg); color: var(--fg);
+  font: 400 16px/1.6 var(--font-body);
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 28px 64px;
+  -webkit-text-size-adjust: 100%;
+}
+.wrap { max-width: 1120px; margin-inline: auto; }
+
+/* Header */
+.top { max-width: 44rem; }
+.eyebrow { font: 600 12px/1.2 var(--font-label); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin: 0 0 10px; }
+h1 { font: 800 clamp(2.4rem, 7vw, 3.75rem)/1 var(--font-display); letter-spacing: -0.02em; margin: 0 0 14px; text-wrap: balance; }
+.lede { font-size: 1.075rem; margin: 0; max-width: 40rem; }
+.lede .ink { color: var(--route); font-weight: 600; }
+
+/* Layout */
+.layout { display: grid; gap: 32px 48px; margin-top: 28px; }
+@media (min-width: 980px) {
+  .layout { grid-template-columns: minmax(0, 460px) minmax(0, 1fr); align-items: start; }
+}
+/* Pin the diagram beside the steps only where the screen is tall enough to keep it full size. */
+@media (min-width: 980px) and (min-height: 1020px) {
+  .diagram { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 16px); }
+  .frame { max-width: min(460px, calc((100vh - 130px) * 400 / 884)); }
+}
+
+/* Diagram */
+.diagram { margin: 0; }
+.frame { border: 1px solid var(--hair); border-radius: 14px; overflow: hidden; background: var(--band-srv); }
+.frame svg { display: block; width: 100%; height: auto; font-family: var(--font-label); }
+figcaption { font-size: .875rem; color: var(--muted); margin-top: 10px; line-height: 1.5; max-width: 460px; }
+.b-dev { fill: var(--band-dev); } .b-har { fill: var(--band-har); } .b-srv { fill: var(--band-srv); } .b-gap { fill: var(--bg); }
+.net { fill: var(--net); stroke: var(--net-line); stroke-width: 1.25; }
+.box { fill: var(--surface); stroke: var(--box-line); stroke-width: 1; transition: stroke .15s; }
+.helper > .box, .box.kv { fill: var(--surface-2); stroke-dasharray: 4 3; }
+.ghost { fill: var(--surface); stroke: var(--box-line); stroke-width: 1; }
+.route { fill: none; stroke: var(--route); stroke-width: 2; stroke-linejoin: round; transition: stroke-width .15s; }
+.route.dash { stroke-dasharray: 4 3; }
+.link { fill: none; stroke: var(--muted); stroke-width: 1.25; stroke-dasharray: 2 3; }
+.ah { fill: var(--route); }
+.chip { fill: var(--chip); stroke: var(--route); stroke-width: .8; }
+.chip-t { font-family: var(--font-mono); font-size: 9.5px; fill: var(--route-ink); text-anchor: middle; }
+.t { font-size: 12.5px; font-weight: 600; fill: var(--fg); }
+.t.sm { font-size: 11.5px; }
+.s { font-size: 10.5px; fill: var(--muted); }
+.num { font-size: 12px; font-weight: 600; fill: var(--route); text-anchor: end; }
+.band { font-size: 10.5px; font-weight: 600; letter-spacing: .08em; }
+.c-dev { fill: var(--dev-ink); } .c-har { fill: var(--har-ink); } .c-srv { fill: var(--srv-ink); } .c-mut { fill: var(--muted); }
+.bsub, .note { font-size: 10.5px; font-style: italic; fill: var(--muted); }
+.kv-t { font-size: 11.5px; font-weight: 600; fill: var(--fg); }
+.kv-s { font-size: 10px; fill: var(--muted); }
+.step, .loopg { cursor: pointer; }
+.step:hover > .box:not(.kv), .step.hl > .box:not(.kv) { stroke: var(--route); stroke-width: 2; }
+.loopg:hover .route, .loopg.hl .route { stroke-width: 3.5; }
+
+/* Step list */
+h2 { font: 700 1.6rem/1.15 var(--font-display); margin: 0 0 6px; text-wrap: balance; letter-spacing: -0.01em; }
+.hint { color: var(--muted); font-size: .9375rem; margin: 0; max-width: 40rem; }
+.place { margin-top: 28px; }
+.place-h { display: flex; align-items: center; gap: 10px; font: 600 .8125rem/1.2 var(--font-label); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin: 0 0 6px; }
+.place-h .sw { width: 14px; height: 14px; border-radius: 4px; flex: none; border: 1px solid var(--box-line); }
+.p-dev .sw { background: var(--band-dev); } .p-har .sw { background: var(--band-har); } .p-srv .sw { background: var(--band-srv); }
+.place-note { margin: 0 0 6px 24px; color: var(--muted); font-size: .9375rem; max-width: 38rem; }
+.list { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.list > li { display: grid; grid-template-columns: 30px minmax(0, 1fr); gap: 12px; padding: 12px 12px 14px 8px; margin-left: -8px; border-radius: 12px; scroll-margin: 24px; }
+.n { width: 28px; height: 28px; border-radius: 50%; border: 1.5px solid var(--route); color: var(--route); font: 600 13px/25px var(--font-label); text-align: center; font-variant-numeric: tabular-nums; box-sizing: border-box; }
+.loop .n { border-style: dashed; font-size: 15px; }
+.body { min-width: 0; }
+.list h3 { font: 600 1.0625rem/1.3 var(--font-body); margin: 2px 0 4px; }
+.list p { margin: 0 0 8px; max-width: 40rem; }
+.list p:last-child { margin-bottom: 0; }
+.ex { font: 400 13px/1.55 var(--font-mono); background: var(--code); border-radius: 8px; padding: 8px 11px; margin: 8px 0 0; overflow-x: auto; white-space: pre; max-width: 40rem; }
+.list p.ex { margin-bottom: 0; }
+.ex-cap { font-size: .8125rem; color: var(--muted); margin: 6px 0 0 !important; }
+.mk { color: var(--route-ink); }
+.tokens { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.tk { display: grid; text-align: center; background: var(--code); border-radius: 7px; padding: 4px 8px 3px; font-family: var(--font-mono); }
+.tk .pc { font-size: 13.5px; white-space: pre; }
+.tk .id { font-size: 11.5px; color: var(--route-ink); font-variant-numeric: tabular-nums; }
+.tk .sp { color: var(--muted); }
+.flash { animation: flash 1.8s ease-out; }
+@keyframes flash { 0%, 35% { background-color: var(--flash); } 100% { background-color: transparent; } }
+@media (prefers-reduced-motion: reduce) {
+  .flash { animation: none; }
+  .box, .route { transition: none; }
+}
+code { font-family: var(--font-mono); font-size: .875em; background: var(--code); padding: 1px 5px; border-radius: 5px; }
+
+/* Extra sections */
+.extra { margin-top: 64px; scroll-margin: 24px; border-radius: 12px; }
+.extra > p { max-width: 44rem; margin: 8px 0 0; }
+.table-wrap { overflow-x: auto; margin-top: 18px; border: 1px solid var(--hair); border-radius: 12px; background: var(--surface); max-width: 60rem; }
+table.cmp { border-collapse: collapse; width: 100%; min-width: 540px; font-size: .9375rem; line-height: 1.45; }
+.cmp th, .cmp td { text-align: left; vertical-align: top; padding: 10px 14px; border-top: 1px solid var(--hair); }
+.cmp thead th { border-top: 0; font: 600 1rem/1.3 var(--font-body); padding-top: 12px; }
+.cmp thead th small { display: block; font: 400 .8125rem/1.3 var(--font-label); color: var(--muted); margin-top: 2px; }
+.cmp tbody th { font: 600 .75rem/1.5 var(--font-label); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); width: 20%; padding-top: 12px; }
+.chain { list-style: none; padding: 0; margin: 18px 0 0; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; max-width: 60rem; }
+.chain li { display: flex; align-items: center; gap: 8px; }
+.chain li:not(:last-child)::after { content: "→"; color: var(--route); font-weight: 600; }
+.pill { background: var(--surface); border: 1px solid var(--box-line); border-radius: 999px; padding: 3px 12px; font-size: .9375rem; }
+.pill.dash { border-style: dashed; }
+.facts { display: grid; gap: 4px 36px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); margin-top: 14px; }
+.fact { border-top: 1px solid var(--hair); padding: 14px 0 10px; }
+.fact h3 { font: 600 1rem/1.3 var(--font-body); margin: 0 0 4px; }
+.fact p { margin: 0; font-size: .9375rem; }
+.foot { margin-top: 56px; padding-top: 16px; border-top: 1px solid var(--hair); color: var(--muted); font-size: .875rem; max-width: 46rem; }
+.foot p { margin: 0 0 6px; }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <p class="eyebrow">Companion to From Zero to ChatGPT</p>
+    <h1>Life of a Prompt</h1>
+    <p class="lede">What happens, and where, between pressing Enter and seeing the answer. The <span class="ink">indigo line</span> is your request. It goes down through the provider's servers to the GPUs, loops once for every token of the answer, and comes back up to you.</p>
+  </header>
+
+  <div class="layout">
+    <figure class="diagram">
+      <div class="frame">
+        <svg id="flow" viewBox="0 0 400 884" role="img" aria-label="Diagram of one chat request. On your phone, the app sends your text over the internet. In the harness, on ordinary servers: front door, safety check, build context, chat template, with helpers on the side: a safety model, tools, and an embedding model with a vector database. On the model server, the tokenizer turns text into token numbers. The LLM itself, on GPUs, runs the embedding layer, 64 transformer layers with a KV cache, and the output layer, which gives bets on every token. The sampler picks one token, which goes back in for the next trip and also to the detokenizer. Back in the harness, a tool call loops back to build context, then come a safety check and send and save. The answer appears on your phone.">
+          <defs>
+            <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto">
+              <path class="ah" d="M0 1L10 5L0 9Z"/>
+            </marker>
+          </defs>
+
+          <!-- places -->
+          <rect class="b-dev" x="0" y="0" width="400" height="86"/>
+          <rect class="b-gap" x="0" y="86" width="400" height="24"/>
+          <rect class="b-har" x="0" y="110" width="400" height="320"/>
+          <rect class="b-srv" x="0" y="430" width="400" height="454"/>
+          <rect class="net" x="30" y="544" width="314" height="250" rx="12"/>
+
+          <text class="band c-dev" x="200" y="18" text-anchor="middle">YOUR PHONE OR LAPTOP</text>
+          <text class="note" x="200" y="102" text-anchor="middle">over the internet</text>
+          <text class="band c-har" x="200" y="128" text-anchor="middle">THE HARNESS · ORDINARY SERVERS</text>
+          <text class="bsub" x="200" y="142" text-anchor="middle">the software around the model</text>
+          <text class="band c-mut" x="200" y="181" text-anchor="middle">HELPERS</text>
+          <text class="bsub" x="200" y="194" text-anchor="middle">called on the side</text>
+          <text class="band c-srv" x="200" y="448" text-anchor="middle">THE MODEL SERVER</text>
+          <text class="bsub" x="200" y="462" text-anchor="middle">one machine with several GPUs</text>
+          <text class="note" x="200" y="493" text-anchor="middle">◂ plain code ▸</text>
+          <text class="note" x="200" y="506" text-anchor="middle">on the CPU</text>
+          <text class="band c-srv" x="332" y="561" text-anchor="end">THE LLM ITSELF</text>
+          <text class="bsub" x="332" y="574" text-anchor="end">trained weights, in GPU memory</text>
+
+          <!-- the request's path -->
+          <path class="route" d="M73 74V151" marker-end="url(#ah)"/>
+          <path class="route" d="M73 198V219" marker-end="url(#ah)"/>
+          <path class="route" d="M73 266V287" marker-end="url(#ah)"/>
+          <path class="route" d="M73 346V367" marker-end="url(#ah)"/>
+          <path class="route" d="M73 414V473" marker-end="url(#ah)"/>
+          <path class="route" d="M73 520V581" marker-end="url(#ah)"/>
+          <path class="route" d="M187 624V649" marker-end="url(#ah)"/>
+          <path class="route" d="M187 704V737" marker-end="url(#ah)"/>
+          <path class="route" d="M187 780V821" marker-end="url(#ah)"/>
+          <path class="route" d="M247 843H366V521" marker-end="url(#ah)"/>
+          <path class="route" d="M327 474V347" marker-end="url(#ah)"/>
+          <path class="route" d="M327 288V267" marker-end="url(#ah)"/>
+          <path class="route" d="M327 220V199" marker-end="url(#ah)"/>
+          <path class="route" d="M327 152V75" marker-end="url(#ah)"/>
+          <path class="route dash" d="M266 317H253" marker-end="url(#ah)"/>
+          <path class="route dash" d="M148 317H135" marker-end="url(#ah)"/>
+          <path class="link" d="M134 243H148M252 243H266M200 346V368"/>
+
+          <!-- what travels -->
+          <rect class="chip" x="42" y="90.5" width="62" height="15" rx="7.5"/><text class="chip-t" x="73" y="101.5">your text</text>
+          <rect class="chip" x="284" y="90.5" width="86" height="15" rx="7.5"/><text class="chip-t" x="327" y="101.5">streamed text</text>
+          <rect class="chip" x="289.5" y="383.5" width="75" height="15" rx="7.5"/><text class="chip-t" x="327" y="394.5">text pieces</text>
+          <rect class="chip" x="30" y="436.5" width="86" height="15" rx="7.5"/><text class="chip-t" x="73" y="447.5">one long text</text>
+          <rect class="chip" x="30" y="524.5" width="86" height="15" rx="7.5"/><text class="chip-t" x="73" y="535.5">token numbers</text>
+          <rect class="chip" x="127" y="629.5" width="120" height="15" rx="7.5"/><text class="chip-t" x="187" y="640.5">a notepad per token</text>
+          <rect class="chip" x="124" y="716.5" width="126" height="15" rx="7.5"/><text class="chip-t" x="187" y="727.5">last token's notepad</text>
+          <rect class="chip" x="127" y="798.5" width="120" height="15" rx="7.5"/><text class="chip-t" x="187" y="809.5">bets on every token</text>
+          <rect class="chip" x="266" y="835.5" width="80" height="15" rx="7.5"/><text class="chip-t" x="306" y="846.5">picked token</text>
+
+          <g class="loopg" data-go="step-loop">
+            <path class="route" d="M127 843H16V603H41" marker-end="url(#ah)"/>
+            <rect class="chip" x="38.5" y="835.5" width="63" height="15" rx="7.5"/><text class="chip-t" x="70" y="846.5">next trip</text>
+          </g>
+
+          <!-- your device -->
+          <g class="step" data-go="step-1">
+            <rect class="box" x="12" y="28" width="182" height="46" rx="8"/>
+            <text class="num" x="34" y="46">1</text>
+            <text class="t" x="42" y="46">You press Enter</text>
+            <text class="s" x="42" y="63">the app sends your text</text>
+          </g>
+          <g class="step" data-go="step-15">
+            <rect class="box" x="206" y="28" width="182" height="46" rx="8"/>
+            <text class="num" x="228" y="46">15</text>
+            <text class="t" x="236" y="46">The answer appears</text>
+            <text class="s" x="236" y="63">markdown becomes formatting</text>
+          </g>
+
+          <!-- the harness -->
+          <g class="step" data-go="step-2">
+            <rect class="box" x="12" y="152" width="122" height="46" rx="8"/>
+            <text class="num" x="34" y="170">2</text>
+            <text class="t" x="42" y="170">Front door</text>
+            <text class="s" x="42" y="187">checks you, routes</text>
+          </g>
+          <g class="step" data-go="step-14">
+            <rect class="box" x="266" y="152" width="122" height="46" rx="8"/>
+            <text class="num" x="288" y="170">14</text>
+            <text class="t" x="296" y="170">Send and save</text>
+            <text class="s" x="296" y="187">streams it to you</text>
+          </g>
+          <g class="step" data-go="step-3">
+            <rect class="box" x="12" y="220" width="122" height="46" rx="8"/>
+            <text class="num" x="34" y="238">3</text>
+            <text class="t" x="42" y="238">Safety check</text>
+            <text class="s" x="42" y="255">your message</text>
+          </g>
+          <g class="step helper" data-go="step-3">
+            <rect class="box" x="148" y="220" width="104" height="46" rx="8"/>
+            <text class="t" x="156" y="238">Safety model</text>
+            <text class="s" x="156" y="255">small classifier</text>
+          </g>
+          <g class="step" data-go="step-13">
+            <rect class="box" x="266" y="220" width="122" height="46" rx="8"/>
+            <text class="num" x="288" y="238">13</text>
+            <text class="t" x="296" y="238">Safety check</text>
+            <text class="s" x="296" y="255">the answer</text>
+          </g>
+          <g class="step" data-go="step-4">
+            <rect class="box" x="12" y="288" width="122" height="58" rx="8"/>
+            <text class="num" x="34" y="306">4</text>
+            <text class="t" x="42" y="306">Build context</text>
+            <text class="s" x="42" y="322">+ system prompt</text>
+            <text class="s" x="42" y="336">+ the chat so far</text>
+          </g>
+          <g class="step helper" data-go="step-12">
+            <rect class="box" x="148" y="288" width="104" height="58" rx="8"/>
+            <text class="t" x="156" y="306">Tools</text>
+            <text class="s" x="156" y="322">web search,</text>
+            <text class="s" x="156" y="336">code, your files</text>
+          </g>
+          <g class="step" data-go="step-12">
+            <rect class="box" x="266" y="288" width="122" height="58" rx="8"/>
+            <text class="num" x="288" y="306">12</text>
+            <text class="t" x="296" y="306">Tool call?</text>
+            <text class="s" x="296" y="322">if yes, run it</text>
+            <text class="s" x="296" y="336">and go again</text>
+          </g>
+          <g class="step" data-go="step-5">
+            <rect class="box" x="12" y="368" width="122" height="46" rx="8"/>
+            <text class="num" x="34" y="386">5</text>
+            <text class="t" x="42" y="386">Chat template</text>
+            <text class="s" x="42" y="403">one long text</text>
+          </g>
+          <g class="step helper" data-go="embeddings">
+            <rect class="box" x="148" y="368" width="104" height="46" rx="8"/>
+            <text class="t sm" x="155" y="386">Embedding model</text>
+            <text class="s" x="156" y="403">+ vector database</text>
+          </g>
+
+          <!-- the model server -->
+          <g class="step" data-go="step-6">
+            <rect class="box" x="12" y="474" width="122" height="46" rx="8"/>
+            <text class="num" x="34" y="492">6</text>
+            <text class="t" x="42" y="492">Tokenizer</text>
+            <text class="s" x="42" y="509">text → numbers</text>
+          </g>
+          <g class="step" data-go="step-11">
+            <rect class="box" x="266" y="474" width="122" height="46" rx="8"/>
+            <text class="num" x="288" y="492">11</text>
+            <text class="t" x="296" y="492">Detokenizer</text>
+            <text class="s" x="296" y="509">numbers → text</text>
+          </g>
+          <g class="step" data-go="step-7">
+            <rect class="box" x="42" y="582" width="290" height="42" rx="8"/>
+            <text class="num" x="64" y="599">7</text>
+            <text class="t" x="72" y="599">Embedding layer</text>
+            <text class="s" x="72" y="614">looks up each token's row of numbers</text>
+          </g>
+          <g class="step" data-go="step-8">
+            <rect class="ghost" x="50" y="658" width="290" height="54" rx="8"/>
+            <rect class="ghost" x="46" y="654" width="290" height="54" rx="8"/>
+            <rect class="box" x="42" y="650" width="290" height="54" rx="8"/>
+            <text class="num" x="64" y="668">8</text>
+            <text class="t" x="72" y="668">Transformer layers × 64</text>
+            <text class="s" x="72" y="683">attention + feed-forward,</text>
+            <text class="s" x="72" y="697">each adds to the notepads</text>
+            <rect class="box kv" x="248" y="660" width="76" height="34" rx="6"/>
+            <text class="kv-t" x="256" y="675">KV cache</text>
+            <text class="kv-s" x="256" y="688">earlier notes</text>
+          </g>
+          <g class="step" data-go="step-9">
+            <rect class="box" x="42" y="738" width="290" height="42" rx="8"/>
+            <text class="num" x="64" y="755">9</text>
+            <text class="t" x="72" y="755">Output layer</text>
+            <text class="s" x="72" y="770">a score for every token, as bets</text>
+          </g>
+          <g class="step" data-go="step-10">
+            <rect class="box" x="127" y="822" width="120" height="42" rx="8"/>
+            <text class="num" x="149" y="839">10</text>
+            <text class="t" x="157" y="839">Sampler</text>
+            <text class="s" x="157" y="854">picks one token</text>
+          </g>
+        </svg>
+      </div>
+      <figcaption>The line is your request. The small labels on it show what's traveling at each point: text, then token numbers, then notepads (lists of numbers), then bets, then one token, then text again. Dashed boxes are helpers, called on the side.</figcaption>
+    </figure>
+
+    <section class="steps" aria-labelledby="steps-h">
+      <h2 id="steps-h">Step by step, with one question</h2>
+      <p class="hint">Tap or click a box in the diagram to jump to its step. The example uses a real open model, Qwen2.5-32B-Instruct, so the token numbers are real.</p>
+
+      <div class="place p-dev">
+        <p class="place-h"><span class="sw"></span>On your phone or laptop</p>
+        <ol class="list">
+          <li id="step-1">
+            <span class="n">1</span>
+            <div class="body">
+              <h3>You press Enter</h3>
+              <p>The app sends your message to the provider's servers as plain text, over an encrypted connection. Nothing AI happens on your phone: no tokens, no model.</p>
+              <p class="ex">What's the capital of Australia?</p>
+            </div>
+          </li>
+        </ol>
+      </div>
+
+      <div class="place p-har">
+        <p class="place-h"><span class="sw"></span>The harness, on the way in</p>
+        <p class="place-note">Ordinary servers in the provider's data center, no GPUs.</p>
+        <ol class="list">
+          <li id="step-2">
+            <span class="n">2</span>
+            <div class="body">
+              <h3>Front door</h3>
+              <p>Checks who you are and whether you're within your limits, then hands the request to a model server that has the model loaded. Some apps also decide here which model should answer.</p>
+            </div>
+          </li>
+          <li id="step-3">
+            <span class="n">3</span>
+            <div class="body">
+              <h3>Safety check</h3>
+              <p>Many providers run your message past a small, separate model trained to spot harmful requests. It only gives a verdict. It doesn't write anything.</p>
+            </div>
+          </li>
+          <li id="step-4">
+            <span class="n">4</span>
+            <div class="body">
+              <h3>Build context</h3>
+              <p>Gathers everything the model will read this turn: the hidden system prompt, the whole chat so far, saved memories about you, descriptions of the tools it may use, and your new message. If that's more than the context window holds, the oldest parts are dropped or summarized.</p>
+            </div>
+          </li>
+          <li id="step-5">
+            <span class="n">5</span>
+            <div class="body">
+              <h3>Chat template</h3>
+              <p>Stitches it all into one long text, with special markers for who said what. It ends on the assistant's marker, so the most natural way to continue the text is a reply. The model only ever continues text.</p>
+<pre class="ex"><span class="mk">&lt;|im_start|&gt;</span>system
+You are a helpful assistant.<span class="mk">&lt;|im_end|&gt;</span>
+<span class="mk">&lt;|im_start|&gt;</span>user
+What's the capital of Australia?<span class="mk">&lt;|im_end|&gt;</span>
+<span class="mk">&lt;|im_start|&gt;</span>assistant</pre>
+              <p class="ex-cap">Qwen's markers. Each model family has its own. If you give no system prompt, this template adds one anyway: “You are Qwen, created by Alibaba Cloud. You are a helpful assistant.”</p>
+            </div>
+          </li>
+        </ol>
+      </div>
+
+      <div class="place p-srv">
+        <p class="place-h"><span class="sw"></span>The model server</p>
+        <p class="place-note">A machine with several GPUs. Only steps 7 to 9 are the trained network, the LLM itself. The tokenizer, sampler and detokenizer are plain code around it.</p>
+        <ol class="list">
+          <li id="step-6">
+            <span class="n">6</span>
+            <div class="body">
+              <h3>Tokenizer</h3>
+              <p>Runs on the server's ordinary processor. It cuts the text into word pieces and swaps each piece for its number in the vocabulary. Each marker is a single token of its own. The whole prompt above becomes 26 tokens.</p>
+              <div class="tokens" role="group" aria-label="Your question as tokens, with their numbers">
+                <span class="tk"><span class="pc">What</span><span class="id">3838</span></span>
+                <span class="tk"><span class="pc">'s</span><span class="id">594</span></span>
+                <span class="tk"><span class="pc"><span class="sp">·</span>the</span><span class="id">279</span></span>
+                <span class="tk"><span class="pc"><span class="sp">·</span>capital</span><span class="id">6722</span></span>
+                <span class="tk"><span class="pc"><span class="sp">·</span>of</span><span class="id">315</span></span>
+                <span class="tk"><span class="pc"><span class="sp">·</span>Australia</span><span class="id">8330</span></span>
+                <span class="tk"><span class="pc">?</span><span class="id">30</span></span>
+              </div>
+              <p class="ex-cap">Your question is 7 of those tokens. A dot marks a space, which belongs to the next word's piece. The marker &lt;|im_start|&gt; is token 151644.</p>
+            </div>
+          </li>
+          <li id="step-7">
+            <span class="n">7</span>
+            <div class="body">
+              <h3>Embedding layer</h3>
+              <p>The LLM's first layer. It's a table with a row for every token, about 152,000 rows. Each token number picks its row: a list of 5,120 numbers (12,288 in GPT-3). That list is the token's notepad. Its position in the text gets marked too.</p>
+            </div>
+          </li>
+          <li id="step-8">
+            <span class="n">8</span>
+            <div class="body">
+              <h3>Transformer layers</h3>
+              <p>The notepads go up the tower: 64 layers here, 96 in GPT-3. In each layer, attention lets the tokens compare notes, and the feed-forward part lets each token think on its own. Every layer adds what it found to the notepads.</p>
+              <p>Each layer also keeps the keys and values it worked out for every token so far, in GPU memory. That's the KV cache. On later trips, only the newest token needs working out; the earlier ones are looked up.</p>
+            </div>
+          </li>
+          <li id="step-9">
+            <span class="n">9</span>
+            <div class="body">
+              <h3>Output layer</h3>
+              <p>Holds the last token's notepad up against every token in the vocabulary, gives each a score, and turns the scores into probabilities: the spread of bets.</p>
+              <p class="ex">The 62%   Canberra 31%   Australia 4%   …</p>
+              <p class="ex-cap">Made-up numbers, for illustration.</p>
+            </div>
+          </li>
+          <li id="step-10">
+            <span class="n">10</span>
+            <div class="body">
+              <h3>Sampler</h3>
+              <p>A few lines of plain code. Nothing in it is trained. It rolls weighted dice over the bets. Temperature makes it bolder or safer, and top-p cuts off the long tail of unlikely tokens.</p>
+              <p class="ex">picks “The”, token 785</p>
+            </div>
+          </li>
+          <li id="step-loop" class="loop">
+            <span class="n" aria-hidden="true">↺</span>
+            <div class="body">
+              <h3>Around again, once per token</h3>
+              <p>The picked token number goes straight back into the embedding layer, skipping the tokenizer, and the next trip starts. The first trip read all 26 prompt tokens at once, in parallel: that's the pause before the first word. After that it's one trip per token, which is the speed you watch the text appear. It stops when the sampler picks the end marker.</p>
+              <div class="tokens" role="group" aria-label="The answer as tokens, with their numbers">
+                <span class="tk"><span class="pc">The</span><span class="id">785</span></span>
+                <span class="tk"><span class="pc"><span class="sp">·</span>capital</span><span class="id">6722</span></span>
+                <span class="tk"><span class="pc"><span class="sp">·</span>of</span><span class="id">315</span></span>
+                <span class="tk"><span class="pc"><span class="sp">·</span>Australia</span><span class="id">8330</span></span>
+                <span class="tk"><span class="pc"><span class="sp">·</span>is</span><span class="id">374</span></span>
+                <span class="tk"><span class="pc"><span class="sp">·</span>Canberra</span><span class="id">68790</span></span>
+                <span class="tk"><span class="pc">.</span><span class="id">13</span></span>
+                <span class="tk"><span class="pc">&lt;|im_end|&gt;</span><span class="id">151645</span></span>
+              </div>
+              <p class="ex-cap">Seven tokens plus the end marker: eight trips up the tower.</p>
+            </div>
+          </li>
+          <li id="step-11">
+            <span class="n">11</span>
+            <div class="body">
+              <h3>Detokenizer</h3>
+              <p>The tokenizer in reverse. Each picked number becomes its piece of text and is sent on right away. That's why answers appear piece by piece.</p>
+              <p class="ex">785 → "The"    6722 → " capital"    …</p>
+            </div>
+          </li>
+        </ol>
+      </div>
+
+      <div class="place p-har">
+        <p class="place-h"><span class="sw"></span>The harness, on the way out</p>
+        <ol class="list">
+          <li id="step-12">
+            <span class="n">12</span>
+            <div class="body">
+              <h3>Tool call?</h3>
+              <p>Sometimes the model writes a request for a tool instead of an answer: search the web, run some code, look in your files. The harness runs the tool, adds the result to the context (step 4), and sends everything through the model again. The model never touches the internet itself. It only writes the request.</p>
+            </div>
+          </li>
+          <li id="step-13">
+            <span class="n">13</span>
+            <div class="body">
+              <h3>Safety check</h3>
+              <p>Often a safety model also reads the answer as it streams, and can stop it.</p>
+            </div>
+          </li>
+          <li id="step-14">
+            <span class="n">14</span>
+            <div class="body">
+              <h3>Send and save</h3>
+              <p>Streams the text to your app as it's made, and saves the chat. Next turn, all of it goes through every step again, because the model rereads the whole conversation each time.</p>
+            </div>
+          </li>
+        </ol>
+      </div>
+
+      <div class="place p-dev">
+        <p class="place-h"><span class="sw"></span>Back on your phone or laptop</p>
+        <ol class="list">
+          <li id="step-15">
+            <span class="n">15</span>
+            <div class="body">
+              <h3>The answer appears</h3>
+              <p>The app shows the text and turns the model's markdown into formatting. Asterisks become bold, pound signs become headings, and pipes become tables.</p>
+            </div>
+          </li>
+        </ol>
+      </div>
+    </section>
+  </div>
+
+  <section class="extra" id="embeddings" aria-labelledby="emb-h">
+    <h2 id="emb-h">Two things called “embedding”</h2>
+    <p>In a plain chat there's no separate embedding model. The embedding is the LLM's own first layer (step 7). An embedding model joins in only when something gets searched, such as your files or a company's documents.</p>
+    <div class="table-wrap">
+      <table class="cmp">
+        <thead>
+          <tr>
+            <th scope="col"><span hidden>Question</span></th>
+            <th scope="col">Embedding layer<small>inside the LLM · every request</small></th>
+            <th scope="col">Embedding model<small>a separate model · only when searching</small></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><th scope="row">Where</th><td>The first layer of the LLM, on the GPUs</td><td>A separate, smaller model that the harness calls</td></tr>
+          <tr><th scope="row">Makes</th><td>One list of numbers per token</td><td>One list of numbers for a whole question or passage</td></tr>
+          <tr><th scope="row">Learned</th><td>Along with the rest of the LLM, to help predict the next token</td><td>To put texts with similar meaning close together</td></tr>
+          <tr><th scope="row">Its numbers go to</th><td>The transformer layers</td><td>A search. The LLM only ever gets the text it finds.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <ol class="chain" aria-label="How a search with an embedding model works">
+      <li><span class="pill">your question</span></li>
+      <li><span class="pill dash">embedding model</span></li>
+      <li><span class="pill">one list of numbers</span></li>
+      <li><span class="pill dash">vector database finds the closest passages</span></li>
+      <li><span class="pill">their text goes into the context (step 4)</span></li>
+    </ol>
+    <p>The vector database holds a list of numbers for every passage of your files, made in advance by the same embedding model. This is called RAG, retrieval-augmented generation. The LLM then reads the passages it was handed like any other text.</p>
+  </section>
+
+  <section class="extra" aria-labelledby="more-h">
+    <h2 id="more-h">Also good to know</h2>
+    <div class="facts">
+      <div class="fact">
+        <h3>Many chats share each trip</h3>
+        <p>The GPUs work on many people's requests in the same pass. That's called batching, and it's how one machine serves many chats at once.</p>
+      </div>
+      <div class="fact">
+        <h3>Big models are split up</h3>
+        <p>A model too big for one GPU is spread across several, often 8 in one machine, and they work on every trip together. The biggest models span several machines.</p>
+      </div>
+      <div class="fact">
+        <h3>Rereading costs less than it sounds</h3>
+        <p>Providers keep the KV cache for the start of a conversation for a few minutes. That's prompt caching: the part that hasn't changed isn't worked out again, so the next turn starts faster and costs less.</p>
+      </div>
+      <div class="fact">
+        <h3>Thinking models use the same loop</h3>
+        <p>A reasoning model first writes its working notes as ordinary tokens, then the answer. Qwen3 puts them between <code>&lt;think&gt;</code> and <code>&lt;/think&gt;</code>. Apps usually hide or summarize the notes, but every one is a trip up the tower.</p>
+      </div>
+      <div class="fact">
+        <h3>Pictures get their own encoder</h3>
+        <p>An attached image is cut into small patches, and a vision encoder turns each patch into a list of numbers. Those join the token notepads at step 7.</p>
+      </div>
+      <div class="fact">
+        <h3>The harness can run on your side</h3>
+        <p>Use a model through its API and your own program does steps 4 and 14: it builds the context and sends the whole chat every time. An agent like Claude Code is a harness on your computer, or in a cloud container like the one that makes this podcast. It reads files, runs tools and calls the model's servers in a loop.</p>
+      </div>
+    </div>
+  </section>
+
+  <footer class="foot">
+    <p>The example model is Qwen2.5-32B-Instruct, an open-weight chat model whose tokenizer, chat format and size are public. The token numbers and counts come from its real tokenizer; the percentages in step 9 are made up.</p>
+    <p>ChatGPT, Claude and other assistants follow the same outline. Their companies don't publish the exact parts.</p>
+  </footer>
+</div>
+
+<script>
+(() => {
+  const svg = document.getElementById('flow');
+  if (!svg) return;
+  const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  svg.addEventListener('click', (e) => {
+    const g = e.target.closest('[data-go]');
+    if (!g) return;
+    const el = document.getElementById(g.dataset.go);
+    if (!el) return;
+    el.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'center' });
+    el.classList.remove('flash');
+    void el.offsetWidth;
+    el.classList.add('flash');
+  });
+  const marks = (id) => svg.querySelectorAll('[data-go="' + id + '"]');
+  document.querySelectorAll('.list > li[id]').forEach((li) => {
+    const on = () => marks(li.id).forEach((m) => m.classList.add('hl'));
+    const off = () => marks(li.id).forEach((m) => m.classList.remove('hl'));
+    li.addEventListener('mouseenter', on);
+    li.addEventListener('mouseleave', off);
+  });
+})();
+</script>
+
+</body>
+</html>
