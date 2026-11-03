@@ -1,3 +1,5 @@
+@AGENTS.md
+
 # AI-pods
 
 A personal podcast series that teaches AI and LLM fundamentals. Episodes are written as scripts, turned into audio with text-to-speech, and listened to in Apple Podcasts.
