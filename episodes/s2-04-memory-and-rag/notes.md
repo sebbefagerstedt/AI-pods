@@ -1,6 +1,6 @@
 # Memory and RAG
 
-From Zero to ChatGPT, season 2. About 19 minutes, with Frank and Alice.
+From Zero to ChatGPT, season 2. About 16 minutes, with Frank and Alice.
 
 How a model that remembers nothing can seem to: the three places knowledge can live, looking things up with retrieval-augmented generation (RAG), keeping memories across sessions, and the new ways a model with a memory can go wrong.
 
