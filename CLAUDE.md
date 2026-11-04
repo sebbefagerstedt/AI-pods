@@ -11,9 +11,6 @@ A personal podcast series that teaches AI and LLM fundamentals. Episodes are wri
 - Finds the papers heavy going and lacks time for them, so episodes must be easy to follow by ear.
 - Likes how "The Curiosity Mix" sounds, an AI podcast with all the hallmarks of NotebookLM's Audio Overviews: the hosts react to each other ("Right." "Exactly."), use fillers and finish each other's sentences.
 - Likes episodes 1 and 9, and doesn't mind the faint, short music like an intro jingle that VibeVoice sometimes adds on its own.
-- Short on credits and fine with lower quality, so keep the work per episode lean (see `RUN_ON_YOUR_COMPUTER.md`, written for them to render on their own computer).
-- Asked for primary sources, not Wikipedia or news summaries (for season 2).
-- Offered to record their own voice; see `voices/README.md` if that comes up again.
 
 ## Decisions
 
@@ -41,7 +38,7 @@ Before writing or changing an episode, read its season's plan and the episode's 
 
 ## Now
 
-Open items only. When one is done, delete it here and add a dated item to the end of `planning/history.md`. Keep this whole file under 1,500 words (`wc -w CLAUDE.md`): something only one kind of task needs goes in its own file or skill, with a pointer above. Don't `@`-import it, since imported files load with this one.
+Open items only. When one is done, delete it here and add a dated item to the end of `planning/history.md`. Keep this whole file under 2,500 words. At the end of each session, check it (`wc -w CLAUDE.md`), and if it's over 1,500 words or holds finished items, suggest to the listener what to move or trim: only one kind of task needs goes in its own file or skill, with a pointer above. Don't `@`-import it, since imported files load with this one.
 
 - **Season 1:** every segment passes the check except 13's last (line 120, a possibly clipped Frank line). The listener listens and reports anything to redo.
 - **Season 2:** the check flagged lines in 1 (segments 1, 4, 5), 2 (5), 3 (1, 4, 6, 7), 4 (4), 5 (1, 5), 6 (2, 5), 7 (5) and 9 (1, 2, 4); 8 passed. List them with `awk '/^== s2-01/{f=1} f' .cache/render_all.log | grep -E "^== |take 1: [^e]"`. The listener decides which, if any, to retake. Season 2 hasn't had the `review-with-me` walk-through AGENTS.md asks for.
